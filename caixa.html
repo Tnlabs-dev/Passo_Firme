@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cappri — Gerar Convite (Uso Interno)</title>
+    <meta name="robots" content="noindex, nofollow">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --cor-fundo: #FAFAFA;
+            --cor-bordeaux: #7A2A46;
+            --cor-rose-gold: #C89B9A;
+            --cor-ouro: #D4AF37;
+            --cor-texto: #4A4A4A;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: var(--cor-fundo);
+            color: var(--cor-texto);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100dvh;
+        }
+        .painel {
+            background: white;
+            max-width: 380px;
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+            padding: 36px 30px;
+            text-align: center;
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            color: var(--cor-bordeaux);
+            font-size: 24px;
+            margin: 0 0 6px 0;
+        }
+        .subtitulo {
+            font-size: 13px;
+            color: #999;
+            margin: 0 0 28px 0;
+        }
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 6px;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--cor-rose-gold);
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--cor-rose-gold), var(--cor-bordeaux));
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            margin-top: 14px;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        button.secundario {
+            background: transparent;
+            color: var(--cor-bordeaux);
+            border: 2px solid var(--cor-bordeaux);
+            padding: 13px;
+        }
+        #tela-qr { display: none; }
+        #qrcode-wrapper {
+            display: flex;
+            justify-content: center;
+            margin: 8px 0 20px 0;
+        }
+        .token-texto {
+            font-family: 'Courier New', monospace;
+            font-size: 17px;
+            letter-spacing: 1.5px;
+            background: #F4EFE6;
+            border: 1px solid #E6D9BE;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 4px;
+            word-break: break-all;
+        }
+        .legenda-token {
+            font-size: 11px;
+            color: #aaa;
+            margin: 0 0 20px 0;
+        }
+        .aviso-erro {
+            color: #A83246;
+            font-size: 12px;
+            text-align: left;
+            margin: 0 0 14px 0;
+            min-height: 14px;
+        }
+        .link-admin {
+            display: inline-block;
+            margin-top: 18px;
+            color: #7A2A46;
+            font-size: 11px;
+            text-decoration: none;
+        }
+        .link-admin:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="painel">
+
+    <div id="tela-senha">
+        <h1>Gerar Convite</h1>
+        <p class="subtitulo">Uso interno — Equipe Cappri</p>
+        <input type="password" id="senha" placeholder="Senha da equipe" inputmode="numeric" autocomplete="off">
+        <p class="aviso-erro" id="erro-senha"></p>
+        <button id="botao-gerar" onclick="gerarConvite()">Gerar Convite</button>
+    </div>
+
+    <div id="tela-qr">
+        <h1>Convite Pronto</h1>
+        <p class="subtitulo">Peça pra cliente escanear com a câmera do celular dela</p>
+        <div id="qrcode-wrapper"></div>
+        <div class="token-texto" id="token-texto"></div>
+        <p class="legenda-token">Código de reserva, caso o QR não funcione</p>
+        <p class="legenda-token" id="nome-campanha"></p>
+        <button onclick="reiniciar()">Gerar Novo Convite</button>
+    </div>
+
+    <a class="link-admin" href="admin.html">Acessar área administrativa</a>
+
+</div>
+
+<script>
+    // Ajuste esses dois links se o domínio do backend ou da roleta mudar.
+    const URL_API = "https://cappri.onrender.com";
+    const URL_ROLETA = "https://capprimodafeminina.github.io/roleta/";
+
+    // Lembra a senha dentro da mesma aba/sessão do navegador, pra
+    // vendedora não precisar redigitar a cada cliente — some sozinha
+    // se fechar a aba.
+    const senhaMemorizada = sessionStorage.getItem("cappri_senha_equipe");
+    if (senhaMemorizada) {
+        document.getElementById("senha").value = senhaMemorizada;
+    }
+
+    async function gerarConvite() {
+        const senha = document.getElementById("senha").value.trim();
+        const botao = document.getElementById("botao-gerar");
+        const erro = document.getElementById("erro-senha");
+        erro.innerText = "";
+
+        if (!senha) {
+            erro.innerText = "Digite a senha da equipe.";
+            return;
+        }
+
+        botao.disabled = true;
+        botao.innerText = "Gerando...";
+
+        try {
+            const resposta = await fetch(`${URL_API}/gerar-convite`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ senha: senha })
+            });
+
+            let dados;
+            try {
+                dados = await resposta.json();
+            } catch (erroDeLeitura) {
+                // A resposta não veio em JSON — normalmente é uma página
+                // de erro temporária do servidor "acordando" do modo de
+                // economia de energia, não um problema real de conexão.
+                erro.innerText = "O servidor ainda está iniciando (comum na primeira chamada depois de um tempo parado). Aguarde uns 20-30 segundos e tente de novo.";
+                botao.disabled = false;
+                botao.innerText = "Gerar Convite";
+                return;
+            }
+
+            if (!resposta.ok) {
+                erro.innerText = dados.detail || "Não foi possível gerar o convite.";
+                botao.disabled = false;
+                botao.innerText = "Gerar Convite";
+                return;
+            }
+
+            // A partir daqui o convite JÁ EXISTE no banco de dados —
+            // mesmo que o desenho do QR falhe por algum motivo (ex: a
+            // biblioteca não carregou), o código não pode se perder.
+            sessionStorage.setItem("cappri_senha_equipe", senha);
+            exibirConvite(dados.token, dados.campanha);
+
+        } catch (e) {
+            erro.innerText = "Erro de conexão. Verifique a internet e tente de novo.";
+        }
+
+        botao.disabled = false;
+        botao.innerText = "Gerar Convite";
+    }
+
+    function exibirConvite(token, campanha) {
+        document.getElementById("token-texto").innerText = token;
+        document.getElementById("nome-campanha").innerText = campanha
+            ? `Campanha: ${campanha}`
+            : "";
+        document.getElementById("tela-senha").style.display = "none";
+        document.getElementById("tela-qr").style.display = "block";
+
+        const wrapper = document.getElementById("qrcode-wrapper");
+        wrapper.innerHTML = "";
+
+        // O desenho do QR é tratado à parte: se falhar (ex: a
+        // biblioteca não carregou por algum motivo), a vendedora ainda
+        // consegue usar o código de texto abaixo normalmente.
+        try {
+            if (typeof QRCode === "undefined") {
+                throw new Error("Biblioteca de QR code não carregada.");
+            }
+            const link = `${URL_ROLETA}?token=${encodeURIComponent(token)}`;
+            const canvas = document.createElement("canvas");
+            wrapper.appendChild(canvas);
+            QRCode.toCanvas(canvas, link, {
+                width: 220,
+                margin: 1,
+                color: { dark: "#4A3B3E", light: "#FFFFFF" }
+            });
+        } catch (erroQr) {
+            wrapper.innerHTML =
+                '<p style="font-size:12px;color:#A83246;max-width:220px;">' +
+                "Não foi possível desenhar o QR agora — use o código abaixo com a cliente." +
+                "</p>";
+        }
+    }
+
+    function reiniciar() {
+        document.getElementById("tela-qr").style.display = "none";
+        document.getElementById("tela-senha").style.display = "block";
+    }
+</script>
+
+</body>
+</html>

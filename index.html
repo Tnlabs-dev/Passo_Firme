@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteio Cappri - Giro de Prêmios</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/zarocknz/javascript-winwheel@2.8.0/Winwheel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1/dist/confetti.browser.min.js"></script>
+    <script src="roleta-layout.js"></script>
+
+    <style>
+        /* Variáveis de Cores Cappri */
+        :root {
+            --cor-fundo: #FAFAFA;
+            --cor-bordeaux: #7A2A46;
+            --cor-rose-gold: #C89B9A;
+            --cor-ouro: #D4AF37;
+            --cor-texto: #4A4A4A;
+        }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            text-align: center; 
+            background-color: var(--cor-fundo); 
+            color: var(--cor-texto);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            /* Fundo com textura leve para dar ar premium */
+            background-image: radial-gradient(circle at center, #ffffff 0%, #FAFAFA 100%);
+        }
+
+        .container { 
+            background: white; 
+            max-width: 420px; 
+            width: 100%;
+            margin: 0 auto; 
+            padding: 0 0 40px 0; 
+            border-radius: 20px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); 
+            border: 1px solid rgba(200, 155, 154, 0.2);
+            overflow: hidden; 
+        }
+
+        .logo-loja {
+            width: 100%;
+            height: auto;
+            margin-bottom: 25px;
+            display: block;
+        }
+
+        .conteudo-interno {
+            padding: 0 30px;
+        }
+
+        h1, h2, h3 { font-family: 'Playfair Display', serif; color: var(--cor-bordeaux); margin: 0 0 15px 0; }
+        h2 { font-size: 28px; font-weight: 700; }
+        p { font-size: 14px; line-height: 1.6; font-weight: 400; margin-bottom: 25px; color: #666; }
+
+        .campo-flutuante {
+            position: relative;
+            margin: 22px 0 26px 0;
+            text-align: left;
+        }
+        .campo-flutuante input {
+            width: 100%;
+            padding: 14px 5px 8px 5px;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #ddd;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            color: var(--cor-texto);
+            transition: border-color 0.3s;
+            box-sizing: border-box;
+        }
+        .campo-flutuante input:focus {
+            outline: none;
+            border-bottom: 2px solid var(--cor-rose-gold);
+        }
+        .campo-flutuante label {
+            position: absolute;
+            left: 5px;
+            top: 14px;
+            font-size: 15px;
+            color: #bbb;
+            pointer-events: none;
+            transition: all 0.25s ease;
+        }
+        .campo-flutuante input:focus ~ label,
+        .campo-flutuante input:not(:placeholder-shown) ~ label {
+            top: -10px;
+            font-size: 11px;
+            color: var(--cor-bordeaux);
+            letter-spacing: 0.5px;
+        }
+        .campo-flutuante .mensagem-erro {
+            display: none;
+            font-size: 11px;
+            color: #A83246;
+            margin-top: 5px;
+        }
+        .campo-flutuante.erro input {
+            border-bottom: 2px solid #A83246;
+        }
+        .campo-flutuante.erro .mensagem-erro {
+            display: block;
+        }
+        @keyframes shake-campo {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .campo-flutuante.shake {
+            animation: shake-campo 0.4s ease;
+        }
+
+        .consentimento {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            text-align: left;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #888;
+            margin: 4px 0 24px 0;
+            cursor: pointer;
+            user-select: none;
+        }
+        .consentimento input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-top: 2px;
+            accent-color: var(--cor-bordeaux);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .consentimento.erro span {
+            color: #A83246;
+        }
+
+        .aviso-flutuante {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-16px);
+            background: #4A3B3E;
+            color: white;
+            padding: 13px 22px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-family: 'Montserrat', sans-serif;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            z-index: 1000;
+            opacity: 0;
+            max-width: 90%;
+            text-align: center;
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+        .aviso-flutuante.mostrar {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .aviso-flutuante.erro { background: var(--cor-bordeaux); }
+
+        button { 
+            width: 100%; 
+            padding: 16px; 
+            margin: 10px 0; 
+            border-radius: 50px; 
+            border: none; 
+            font-size: 16px; 
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600; 
+            letter-spacing: 1px;
+            cursor: pointer; 
+            transition: all 0.3s ease; 
+            text-transform: uppercase;
+        }
+        
+        .btn-primario { 
+            background: linear-gradient(135deg, var(--cor-rose-gold), var(--cor-bordeaux)); 
+            color: white; 
+            box-shadow: 0 4px 15px rgba(122, 42, 70, 0.3);
+        }
+        .btn-primario:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(122, 42, 70, 0.4); }
+        .btn-primario:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+        
+        .btn-wpp { background: #25D366; color: white; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
+        .btn-wpp:hover { background: #1ebe57; transform: translateY(-2px); }
+        .btn-confirmar-compartilhamento { margin-top: 4px; }
+        .btn-confirmar-compartilhamento[hidden] { display: none !important; }
+        .instrucao-compartilhamento { font-size: 12px; color: #777; line-height: 1.5; margin: 8px 0 0; }
+
+        /* ========================================= */
+        /* NOVO DESIGN DA ROLETA (LUXO METÁLICO)     */
+        /* ========================================= */
+        
+        #roleta-container {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .roleta-wrapper { 
+            position: relative; 
+            width: 320px; 
+            max-width: 100%;
+            aspect-ratio: 1 / 1;
+            margin: 40px auto; 
+            /* Borda Metálica (Aro) usando gradiente cônico */
+            background: conic-gradient(
+                #D4AF37, #FFF8D6, #D4AF37, #9B7B22, #D4AF37, #FFF8D6, #D4AF37
+            );
+            border-radius: 50%;
+            padding: 12px; /* Espessura da borda de ouro */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3), inset 0 3px 10px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+        
+        /* A Seta superior ajustada */
+        .seta-roleta {
+            width: 0; 
+            height: 0; 
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-top: 35px solid var(--cor-bordeaux);
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.4));
+        }
+        .seta-roleta::after { /* Efeito 3D na seta */
+            content: '';
+            position: absolute;
+            top: -33px;
+            left: -12px;
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            border-top: 23px solid #FFFDF8;
+        }
+
+        /* O Canvas onde o Javascript desenha as fatias */
+        canvas { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; /* Corta as fatias perfeitamente redondas */
+            box-sizing: border-box;
+            border: 3px solid #FFFDF8; /* Separa visualmente do anel dourado em qualquer ângulo */
+            display: block;
+        }
+
+        /* O Pino Central com a Logo "C" */
+        .centro-roleta {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75px;
+            height: 75px;
+            /* Botão metálico Rose Gold/Nude */
+            background: radial-gradient(circle at 30% 30%, #FDF5E6, #C89B9A);
+            border-radius: 50%;
+            border: 3px solid #D4AF37;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.8);
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .centro-roleta .coroa {
+            font-size: 24px;
+            color: #4A3B3E; /* Coroa Escura */
+            margin-bottom: -12px;
+            line-height: 1;
+        }
+        
+        .centro-roleta .letra-c {
+            font-family: 'Playfair Display', serif;
+            font-size: 42px;
+            color: #4A3B3E; /* Letra Escura */
+            font-weight: 700;
+            line-height: 1;
+        }
+        /* ========================================= */
+
+        .blur-effect { filter: blur(5px); opacity: 0.7; pointer-events: none; }
+
+        .etapa { display: none; }
+        #etapa-1 { display: block; }
+
+        .voucher-box {
+            position: relative;
+            border: 2px dashed var(--cor-ouro);
+            background-color: #FFFDF8;
+            padding: 30px 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            animation: voucherAparece 0.5s ease;
+        }
+        @keyframes voucherAparece {
+            from { opacity: 0; transform: scale(0.92) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .selo-voucher {
+            position: absolute;
+            top: -18px;
+            right: -14px;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #FFF8D6, #D4AF37);
+            color: #4A3B3E;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            border: 2px solid white;
+        }
+        .premio-texto {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: var(--cor-bordeaux);
+            margin: 15px 0;
+            font-weight: 700;
+        }
+        .validade-voucher {
+            font-size: 12px;
+            color: var(--cor-bordeaux);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-top: -10px !important;
+        }
+        .codigo-voucher {
+            display: inline-block;
+            font-family: 'Montserrat', monospace;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            color: #4A3B3E;
+            background: #F4EFE6;
+            border: 1px solid #E6D9BE;
+            padding: 5px 14px;
+            border-radius: 20px;
+            margin-top: 4px !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img src="WhatsApp Image 2026-07-12 at 18.02.27.jpeg" alt="Cappri Logo" class="logo-loja">
+
+    <div class="conteudo-interno">
+        <div id="etapa-1" class="etapa">
+            <h2>Gire e Ganhe</h2>
+            <p>Preencha seus dados e insira o convite dourado para revelar seu prêmio exclusivo.</p>
+
+            <div class="campo-flutuante" id="campo-nome">
+                <input type="text" id="nome" placeholder=" " required>
+                <label for="nome">Seu Nome Completo</label>
+                <span class="mensagem-erro">Digite seu nome completo.</span>
+            </div>
+
+            <div class="campo-flutuante" id="campo-whatsapp">
+                <input type="tel" inputmode="numeric" id="whatsapp" placeholder=" " maxlength="16" required>
+                <label for="whatsapp">Seu WhatsApp</label>
+                <span class="mensagem-erro">WhatsApp inválido. Use (DD) 9XXXX-XXXX.</span>
+            </div>
+
+            <div class="campo-flutuante" id="campo-token">
+                <input type="text" id="token" placeholder=" " required>
+                <label for="token">Código de Autorização</label>
+                <span class="mensagem-erro">Verifique o código informado.</span>
+            </div>
+
+            <label class="consentimento" id="campo-consentimento">
+                <input type="checkbox" id="consentimento">
+                <span id="texto-consentimento">Aceito receber contato da Cappri via WhatsApp sobre este sorteio.</span>
+            </label>
+            
+            <button class="btn-primario" onclick="avancarParaWhatsapp()">Acessar Roleta</button>
+        </div>
+
+        <div id="roleta-container">
+            <div class="roleta-wrapper" id="roleta-visual">
+                <div class="seta-roleta"></div>
+                
+                <div class="centro-roleta">
+                    <div class="coroa">♔</div>
+                    <div class="letra-c">C</div>
+                </div>
+
+                <canvas id="canvasRoleta" width="350" height="350">
+                    Seu navegador não suporta a roleta.
+                </canvas>
+            </div>
+
+            <div id="etapa-2" class="etapa" style="margin-top: -40px; position: relative; z-index: 20;">
+                <div style="background: rgba(255,255,255,0.95); padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                    <h3>Quase lá!</h3>
+                    <p>Para destravar seu giro e garantir seu prêmio, envie esta mensagem para <strong>3 amigas</strong> no WhatsApp.</p>
+                    <p id="instrucao-compartilhamento" class="instrucao-compartilhamento">Dica: ao compartilhar, você pode selecionar várias conversas de uma vez.</p>
+                    <button id="botao-compartilhar" class="btn-wpp" onclick="compartilharWpp()">Compartilhar 💬</button>
+                    <button id="botao-confirmar-compartilhamento" class="btn-primario btn-confirmar-compartilhamento" onclick="registrarCompartilhamentoValido()" hidden>Já compartilhei — liberar giro</button>
+                </div>
+            </div>
+
+            <div id="etapa-3" class="etapa">
+                <button class="btn-primario" id="botao-girar-real" onclick="dispararSorteio()">Girar Roleta!</button>
+            </div>
+        </div>
+
+        <div id="etapa-4" class="etapa">
+            <div class="voucher-box">
+                <div class="selo-voucher">✓</div>
+                <h3 style="color: var(--cor-ouro); font-size: 20px; text-transform: uppercase; letter-spacing: 2px;">Voucher Liberado</h3>
+                <p>Apresente esta tela no caixa para retirar o seu presente.</p>
+                <div class="premio-texto" id="nome-premio-final"></div>
+                <p class="validade-voucher" id="validade-voucher"></p>
+                <p class="codigo-voucher" id="codigo-voucher"></p>
+                <p style="font-size: 12px; color: #999; margin-bottom: 0;">Válido apenas para compras aprovadas.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const URL_API = "https://cappri.onrender.com";
+    let roleta;
+    let premioGanho = "";
+    let codigoVoucher = "";
+    let campanhaAtual = "";
+
+    // Se o link veio de um QR code gerado no caixa, o código já chega
+    // pronto na URL (?token=...) — preenche sozinho, sem a cliente
+    // precisar digitar nada.
+    const parametrosDaUrl = new URLSearchParams(window.location.search);
+    const tokenDaUrl = parametrosDaUrl.get("token");
+    if (tokenDaUrl) {
+        document.getElementById("token").value = tokenDaUrl;
+    }
+
+    // Quantos dias o voucher vale a partir do momento em que é gerado.
+    const DIAS_VALIDADE_VOUCHER = 15;
+
+    // Mensagem enviada quando a cliente compartilha no WhatsApp.
+    // É só uma frase — pode me pedir pra ajustar o tom quando quiser.
+    const MENSAGEM_COMPARTILHAMENTO =
+        "Acabei de descobrir a Roleta de Prêmios da Cappri! ✨ Comprando acima de R$200 você garante um giro e pode ganhar desde cupons até R$500 em roupas. Dá uma olhada no Instagram pra saber quando tem: instagram.com/uze.cappri 💫👗";
+
+    // --- Sons (gerados por código, sem precisar de arquivo de áudio) ---
+
+    let audioCtx = null;
+    function obterAudioContext() {
+        if (!audioCtx) {
+            const AudioContextClasse = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClasse) return null;
+            audioCtx = new AudioContextClasse();
+        }
+        if (audioCtx.state === "suspended") {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    function tocarTom(frequencia, inicio, duracao, volume) {
+        const ctx = obterAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const ganho = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = frequencia;
+        ganho.gain.setValueAtTime(0, ctx.currentTime + inicio);
+        ganho.gain.linearRampToValueAtTime(volume, ctx.currentTime + inicio + 0.02);
+        ganho.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + inicio + duracao);
+        osc.connect(ganho);
+        ganho.connect(ctx.destination);
+        osc.start(ctx.currentTime + inicio);
+        osc.stop(ctx.currentTime + inicio + duracao + 0.05);
+    }
+
+    function criarBufferRuido(ctx, duracao) {
+        const tamanho = Math.max(1, Math.ceil(ctx.sampleRate * duracao));
+        const buffer = ctx.createBuffer(1, tamanho, ctx.sampleRate);
+        const dados = buffer.getChannelData(0);
+        for (let i = 0; i < tamanho; i++) {
+            // Ruído branco com um decaimento leve já embutido na própria
+            // amostra, pra nascer com uma textura mais "seca" (percussiva).
+            dados[i] = (Math.random() * 2 - 1) * (1 - i / tamanho);
+        }
+        return buffer;
+    }
+
+    function tocarTique(instante) {
+        const ctx = obterAudioContext();
+        if (!ctx) return;
+        const agora = ctx.currentTime + instante;
+
+        // Parte 1: o "clique" propriamente dito — ruído passado por um
+        // filtro, como uma lingueta física batendo numa fatia da
+        // roleta. É essa textura de ruído (não um tom puro) que faz
+        // soar mecânico em vez de eletrônico.
+        const duracaoClique = 0.035;
+        const fonte = ctx.createBufferSource();
+        fonte.buffer = criarBufferRuido(ctx, duracaoClique);
+
+        const filtro = ctx.createBiquadFilter();
+        filtro.type = "bandpass";
+        filtro.frequency.value = 500 + Math.random() * 200; // grave, não agudo
+        filtro.Q.value = 0.8;
+
+        const ganhoClique = ctx.createGain();
+        ganhoClique.gain.setValueAtTime(0.55, agora);
+        ganhoClique.gain.exponentialRampToValueAtTime(0.001, agora + duracaoClique);
+
+        fonte.connect(filtro);
+        filtro.connect(ganhoClique);
+        ganhoClique.connect(ctx.destination);
+        fonte.start(agora);
+        fonte.stop(agora + duracaoClique + 0.01);
+
+        // Parte 2: um "corpo" grave por baixo do clique, dando peso —
+        // como a ressonância da madeira/plástico da roleta.
+        const corpo = ctx.createOscillator();
+        corpo.type = "triangle";
+        corpo.frequency.value = 150 + Math.random() * 40;
+        const ganhoCorpo = ctx.createGain();
+        ganhoCorpo.gain.setValueAtTime(0.22, agora);
+        ganhoCorpo.gain.exponentialRampToValueAtTime(0.001, agora + 0.05);
+        corpo.connect(ganhoCorpo);
+        ganhoCorpo.connect(ctx.destination);
+        corpo.start(agora);
+        corpo.stop(agora + 0.06);
+    }
+
+    function tocarSomGiro() {
+        // Simula o "tic-tic-tic" de um pino físico batendo nas
+        // divisórias da roleta enquanto ela gira e desacelera — os
+        // cliques começam rápidos e vão espaçando até o final, seguindo
+        // a mesma curva de desaceleração (ease-out) usada na animação.
+        const duracaoTotal = 5;      // igual ao "duration" da animação da roleta
+        const voltasAprox = 8.6;     // aproximação: 8 voltas configuradas + margem até parar
+        const rotacaoTotalGraus = voltasAprox * 360;
+        const grausPorTique = 30;    // 1 clique por fatia (12 fatias = 30° cada)
+        const totalTiques = Math.floor(rotacaoTotalGraus / grausPorTique);
+
+        for (let k = 1; k <= totalTiques; k++) {
+            const progresso = (k * grausPorTique) / rotacaoTotalGraus; // 0 a 1
+            const tempoNormalizado = 1 - Math.cbrt(1 - progresso);     // ease-out cúbica
+            tocarTique(tempoNormalizado * duracaoTotal);
+        }
+    }
+
+    function tocarSomVitoria() {
+        // Pequena fanfarra ascendente, tipo "conquista desbloqueada"
+        tocarTom(523.25, 0, 0.18, 0.3);     // Dó5
+        tocarTom(659.25, 0.12, 0.18, 0.3);  // Mi5
+        tocarTom(783.99, 0.24, 0.22, 0.32); // Sol5
+        tocarTom(1046.5, 0.4, 0.5, 0.3);    // Dó6 — nota final, mais aguda
+    }
+
+    // --- Utilitários de feedback visual (substituem os alert() nativos) ---
+
+    let avisoTimeout;
+    function mostrarAviso(mensagem, tipo = "erro") {
+        let aviso = document.getElementById("aviso-flutuante");
+        if (!aviso) {
+            aviso = document.createElement("div");
+            aviso.id = "aviso-flutuante";
+            document.body.appendChild(aviso);
+        }
+        aviso.textContent = mensagem;
+        aviso.className = "aviso-flutuante mostrar " + tipo;
+        clearTimeout(avisoTimeout);
+        avisoTimeout = setTimeout(() => aviso.classList.remove("mostrar"), 4000);
+    }
+
+    function marcarErro(idCampo, mostrar) {
+        const campo = document.getElementById(idCampo);
+        if (!campo) return;
+        if (mostrar) {
+            campo.classList.add("erro");
+            campo.classList.remove("shake");
+            void campo.offsetWidth; // força reinício da animação
+            campo.classList.add("shake");
+        } else {
+            campo.classList.remove("erro");
+        }
+    }
+
+    function limparErros() {
+        ["campo-nome", "campo-whatsapp", "campo-token"].forEach(id => marcarErro(id, false));
+        document.getElementById("campo-consentimento").classList.remove("erro");
+    }
+
+    // --- Máscara do WhatsApp enquanto digita: (DD) 9XXXX-XXXX ---
+
+    function aplicarMascaraWhatsapp(valor) {
+        let numeros = valor.replace(/\D/g, "").slice(0, 11);
+        if (numeros.length === 0) return "";
+        let ddd = numeros.slice(0, 2);
+        let resto = numeros.slice(2);
+        let formatado = "(" + ddd;
+        if (resto.length > 0) formatado += ") ";
+        if (numeros.length <= 10) {
+            formatado += resto.slice(0, 4);
+            if (resto.length > 4) formatado += "-" + resto.slice(4, 8);
+        } else {
+            formatado += resto.slice(0, 5);
+            if (resto.length > 5) formatado += "-" + resto.slice(5, 9);
+        }
+        return formatado;
+    }
+
+    document.getElementById("whatsapp").addEventListener("input", function (e) {
+        e.target.value = aplicarMascaraWhatsapp(e.target.value);
+    });
+
+    async function avancarParaWhatsapp() {
+        limparErros();
+
+        const nome = document.getElementById("nome").value.trim();
+        const zap = document.getElementById("whatsapp").value;
+        const token = document.getElementById("token").value.trim();
+        const consentimentoMarcado = document.getElementById("consentimento").checked;
+
+        let temErro = false;
+
+        if (!nome) {
+            marcarErro("campo-nome", true);
+            temErro = true;
+        }
+
+        const somenteNumeros = zap.replace(/\D/g, "");
+        if (!zap || !/^\d{10,11}$/.test(somenteNumeros)) {
+            marcarErro("campo-whatsapp", true);
+            temErro = true;
+        }
+
+        if (!token) {
+            marcarErro("campo-token", true);
+            temErro = true;
+        }
+
+        if (temErro) {
+            mostrarAviso("Confira os campos destacados antes de continuar.", "erro");
+            return;
+        }
+
+        if (!consentimentoMarcado) {
+            document.getElementById("campo-consentimento").classList.add("erro");
+            mostrarAviso("Você precisa aceitar para continuar.", "erro");
+            return;
+        }
+
+        const botaoAcessar = document.querySelector("#etapa-1 button.btn-primario");
+        const textoOriginal = botaoAcessar.innerText;
+        botaoAcessar.disabled = true;
+        botaoAcessar.innerText = "Verificando...";
+
+        try {
+            const resposta = await fetch(`${URL_API}/verificar-token/${token}`);
+            const dados = await resposta.json();
+
+            if (!resposta.ok || !dados.valido) {
+                marcarErro("campo-token", true);
+                mostrarAviso(dados.mensagem || dados.detail || "Este convite não é válido.", "erro");
+                return;
+            }
+
+            campanhaAtual = dados.campanha || "";
+            const premios = await carregarPremios();
+
+            // O navegador só consegue calcular a largura da roleta depois que
+            // seu contêiner deixa de estar oculto (display: none).
+            document.getElementById("etapa-1").style.display = "none";
+            document.getElementById("roleta-container").style.display = "block";
+            document.getElementById("roleta-visual").classList.add("blur-effect");
+            document.getElementById("etapa-2").style.display = "block";
+
+            await CappriRoletaLayout.aguardarLayout();
+            montarRoleta(premios);
+        } catch (erro) {
+            document.getElementById("etapa-1").style.display = "block";
+            document.getElementById("roleta-container").style.display = "none";
+            document.getElementById("roleta-visual").classList.remove("blur-effect");
+            document.getElementById("etapa-2").style.display = "none";
+            mostrarAviso(
+                erro.message || "Erro de conexão. Verifique sua internet e tente novamente.",
+                "erro"
+            );
+        } finally {
+            botaoAcessar.disabled = false;
+            botaoAcessar.innerText = textoOriginal;
+        }
+    }
+
+    async function carregarPremios() {
+        const resposta = await fetch(`${URL_API}/premios`);
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            throw new Error(dados.detail || "Não foi possível carregar os prêmios.");
+        }
+        if (!Array.isArray(dados.dados) || dados.dados.length < 2) {
+            throw new Error("A campanha precisa ter pelo menos dois prêmios na roleta.");
+        }
+
+        const premios = [...dados.dados].sort(
+            (a, b) => a.posicao_roleta - b.posicao_roleta
+        );
+        const posicoesValidas = premios.every(
+            (premio, indice) => premio.posicao_roleta === indice + 1
+        );
+        if (!posicoesValidas) {
+            throw new Error("As posições dos prêmios da campanha precisam ser contínuas.");
+        }
+
+        campanhaAtual = dados.campanha?.nome || campanhaAtual;
+        if (dados.campanha?.texto_consentimento) {
+            document.getElementById("texto-consentimento").textContent =
+                dados.campanha.texto_consentimento;
+        }
+        return premios;
+    }
+
+    function montarRoleta(premios) {
+        if (roleta) return;
+
+        // O anel dourado (wrapper) e a roleta (canvas) agora são
+        // calculados NO MESMO LUGAR, a partir do mesmo número — em vez
+        // de um vir do CSS (aspect-ratio/%) e o outro de uma leitura
+        // separada, os dois nascem da mesma conta, então nunca mais
+        // podem ficar dessincronizados.
+        const wrapper = document.getElementById('roleta-visual');
+        const canvasRoleta = document.getElementById('canvasRoleta');
+        const larguraDisponivel = wrapper.parentElement.getBoundingClientRect().width;
+        const dimensoes = CappriRoletaLayout.calcularDimensoesRoleta(
+            larguraDisponivel,
+            window.devicePixelRatio
+        );
+        const { diametroAnel, diametroRoleta, resolucao, escala, outerRadius } = dimensoes;
+
+        wrapper.style.width = diametroAnel + "px";
+        wrapper.style.height = diametroAnel + "px";
+        canvasRoleta.style.width = diametroRoleta + "px";
+        canvasRoleta.style.height = diametroRoleta + "px";
+
+        // Resolução nítida em telas de alta densidade (Retina/iPhone),
+        // calculada a partir do tamanho real que acabamos de fixar.
+        canvasRoleta.width = resolucao;
+        canvasRoleta.height = resolucao;
+
+        // 350 foi o tamanho de referência usado no desenho original —
+        // escalamos as demais medidas (fonte, margem, espessura da
+        // linha) na mesma proporção da nova resolução.
+        const paleta = [
+            { fundo: '#FDF5E6', texto: '#4A3B3E' },
+            { fundo: '#4A3B3E', texto: '#FDF5E6' },
+            { fundo: '#C89B9A', texto: '#4A3B3E' },
+            { fundo: '#E6C8C7', texto: '#4A3B3E' }
+        ];
+        const segmentos = premios.map((premio, indice) => {
+            const cores = indice === premios.length - 1
+                ? { fundo: '#D4AF37', texto: '#FFFFFF' }
+                : paleta[indice % paleta.length];
+            return {
+                fillStyle: cores.fundo,
+                text: premio.nome,
+                textFillStyle: cores.texto
+            };
+        });
+
+        roleta = new Winwheel({
+            'canvasId': 'canvasRoleta',
+            'numSegments': segmentos.length,
+            'outerRadius': outerRadius,
+            'textFontSize': Math.max(9, Math.min(14, 140 / segmentos.length)) * escala,
+            'textFontFamily': 'Montserrat',
+            'textMargin': 15 * escala,
+            'lineWidth': 1.5 * escala,
+            'strokeStyle': '#D4AF37', 
+            'segments': segmentos,
+            'animation': {
+                'type': 'spinToStop',
+                'duration': 5,
+                'spins': 8,
+                'callbackFinished': mostrarResultado
+            }
+        });
+    }
+    function compartilharWpp() {
+        const botaoCompartilhar = document.getElementById("botao-compartilhar");
+        const botaoConfirmar = document.getElementById("botao-confirmar-compartilhamento");
+        const instrucao = document.getElementById("instrucao-compartilhamento");
+        const texto = encodeURIComponent(MENSAGEM_COMPARTILHAMENTO);
+        const linkWeb = `https://wa.me/?text=${texto}`;
+        const janelaCompartilhamento = window.open(linkWeb, "_blank", "noopener,noreferrer");
+
+        botaoCompartilhar.innerText = janelaCompartilhamento
+            ? "Abrir WhatsApp novamente"
+            : "Tentar abrir WhatsApp novamente";
+        instrucao.innerText = "Depois de enviar a mensagem, volte para esta tela e confirme abaixo.";
+        botaoConfirmar.hidden = false;
+
+        if (!janelaCompartilhamento) {
+            mostrarAviso("O navegador bloqueou a nova aba. Permita a abertura ou tente novamente.", "erro");
+        }
+    }
+
+    function registrarCompartilhamentoValido() {
+        document.getElementById("etapa-2").style.display = "none";
+        document.getElementById("botao-confirmar-compartilhamento").hidden = true;
+        document.getElementById("roleta-visual").classList.remove("blur-effect");
+        document.getElementById("etapa-3").style.display = "block";
+    }
+
+    async function dispararSorteio() {
+        // Precisa ser chamado de forma síncrona, ainda dentro do clique do
+        // botão — é o que o navegador exige pra permitir tocar áudio.
+        obterAudioContext();
+
+        const nome = document.getElementById("nome").value;
+        const zap = document.getElementById("whatsapp").value;
+        const token = document.getElementById("token").value;
+
+        document.getElementById("botao-girar-real").disabled = true;
+        document.getElementById("botao-girar-real").innerText = "Sorteando...";
+
+        try {
+            const url_api = `${URL_API}/sortear/${token}`;
+            const resposta = await fetch(url_api, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    nome: nome,
+                    whatsapp: zap,
+                    consentimento: document.getElementById("consentimento").checked
+                })
+            });
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                mostrarAviso(dados.detail || "Não foi possível concluir o sorteio.", "erro");
+                document.getElementById("roleta-container").style.display = "none";
+                document.getElementById("etapa-3").style.display = "none";
+                document.getElementById("etapa-1").style.display = "block";
+
+                document.getElementById("botao-girar-real").disabled = false;
+                document.getElementById("botao-girar-real").innerText = "Girar Roleta!";
+                return;
+            }
+
+            premioGanho = dados.premio;
+            codigoVoucher = dados.codigo_voucher || "";
+
+            // O índice da fatia agora vem pronto da API (mais confiável
+            // do que tentar adivinhar comparando texto).
+            let segmentoAlvo = dados.indice_roleta || 1;
+
+            let anguloParada = roleta.getRandomForSegment(segmentoAlvo);
+            roleta.animation.stopAngle = anguloParada;
+            tocarSomGiro();
+            roleta.startAnimation();
+
+        } catch (erro) {
+            mostrarAviso("Erro de conexão. Verifique o servidor.", "erro");
+            document.getElementById("botao-girar-real").disabled = false;
+            document.getElementById("botao-girar-real").innerText = "Girar Roleta!";
+        }
+    }
+
+    function mostrarResultado() {
+        document.getElementById("roleta-container").style.display = "none";
+        document.getElementById("nome-premio-final").innerText = premioGanho;
+
+        const dataValidade = new Date();
+        dataValidade.setDate(dataValidade.getDate() + DIAS_VALIDADE_VOUCHER);
+        const dataFormatada = dataValidade.toLocaleDateString("pt-BR");
+        document.getElementById("validade-voucher").innerText = `Válido até ${dataFormatada}`;
+        document.getElementById("codigo-voucher").innerText = codigoVoucher
+            ? `Código de conferência: ${codigoVoucher}`
+            : "";
+
+        document.getElementById("etapa-4").style.display = "block";
+
+        tocarSomVitoria();
+
+        if (typeof confetti === "function") {
+            confetti({
+                particleCount: 140,
+                spread: 80,
+                startVelocity: 42,
+                gravity: 0.9,
+                colors: ["#D4AF37", "#C89B9A", "#7A2A46", "#FFF8D6"],
+                origin: { y: 0.55 }
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
