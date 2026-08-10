@@ -49,7 +49,7 @@
     }
 
     const api = { calcularDimensoesRoleta, aguardarLayout };
-    escopoGlobal.CappriRoletaLayout = api;
+    escopoGlobal.RoletaLayout = api;
 
     if (typeof module !== "undefined" && module.exports) {
         module.exports = api;

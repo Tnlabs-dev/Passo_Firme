@@ -15,13 +15,14 @@
     <script src="roleta-layout.js"></script>
 
     <style>
-        /* Variáveis de Cores Cappri */
+        /* Identidade visual Passo Firme, baseada nas cores da logomarca */
         :root {
-            --cor-fundo: #FAFAFA;
-            --cor-bordeaux: #7A2A46;
-            --cor-rose-gold: #C89B9A;
-            --cor-ouro: #D4AF37;
-            --cor-texto: #4A4A4A;
+            --cor-fundo: #F3F6F8;
+            --cor-azul-marinho: #0D2E46;
+            --cor-vermelho: #B02C3A;
+            --cor-vermelho-claro: #F7E6E8;
+            --cor-borda: #D8E1E6;
+            --cor-texto: #263844;
         }
 
         body { 
@@ -36,7 +37,7 @@
             align-items: center;
             min-height: 100vh;
             /* Fundo com textura leve para dar ar premium */
-            background-image: radial-gradient(circle at center, #ffffff 0%, #FAFAFA 100%);
+            background-image: radial-gradient(circle at center, #ffffff 0%, var(--cor-fundo) 100%);
         }
 
         .container { 
@@ -47,13 +48,15 @@
             padding: 0 0 40px 0; 
             border-radius: 20px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.08); 
-            border: 1px solid rgba(200, 155, 154, 0.2);
+            border: 1px solid rgba(13, 46, 70, 0.14);
             overflow: hidden; 
         }
 
         .logo-loja {
             width: 100%;
-            height: auto;
+            height: 280px;
+            object-fit: cover;
+            object-position: center;
             margin-bottom: 25px;
             display: block;
         }
@@ -62,7 +65,7 @@
             padding: 0 30px;
         }
 
-        h1, h2, h3 { font-family: 'Playfair Display', serif; color: var(--cor-bordeaux); margin: 0 0 15px 0; }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; color: var(--cor-azul-marinho); margin: 0 0 15px 0; }
         h2 { font-size: 28px; font-weight: 700; }
         p { font-size: 14px; line-height: 1.6; font-weight: 400; margin-bottom: 25px; color: #666; }
 
@@ -85,7 +88,7 @@
         }
         .campo-flutuante input:focus {
             outline: none;
-            border-bottom: 2px solid var(--cor-rose-gold);
+            border-bottom: 2px solid var(--cor-vermelho);
         }
         .campo-flutuante label {
             position: absolute;
@@ -100,17 +103,17 @@
         .campo-flutuante input:not(:placeholder-shown) ~ label {
             top: -10px;
             font-size: 11px;
-            color: var(--cor-bordeaux);
+            color: var(--cor-azul-marinho);
             letter-spacing: 0.5px;
         }
         .campo-flutuante .mensagem-erro {
             display: none;
             font-size: 11px;
-            color: #A83246;
+            color: var(--cor-vermelho);
             margin-top: 5px;
         }
         .campo-flutuante.erro input {
-            border-bottom: 2px solid #A83246;
+            border-bottom: 2px solid var(--cor-vermelho);
         }
         .campo-flutuante.erro .mensagem-erro {
             display: block;
@@ -140,27 +143,27 @@
             width: 16px;
             height: 16px;
             margin-top: 2px;
-            accent-color: var(--cor-bordeaux);
+            accent-color: var(--cor-vermelho);
             flex-shrink: 0;
             cursor: pointer;
         }
         .consentimento.erro span {
-            color: #A83246;
+            color: var(--cor-vermelho);
         }
         .aviso-privacidade {
             padding: 12px 14px;
             margin: 4px 0 16px;
-            border: 1px solid #eadde0;
+            border: 1px solid var(--cor-borda);
             border-radius: 12px;
-            background: #fcf8f8;
-            color: #675a5e;
+            background: #F7FAFB;
+            color: #526570;
             font-size: 11px;
             line-height: 1.55;
             text-align: left;
         }
         .aviso-privacidade a,
         .link-privacidade {
-            color: var(--cor-bordeaux);
+            color: var(--cor-azul-marinho);
             font-weight: 600;
             text-decoration: underline;
             text-underline-offset: 2px;
@@ -168,7 +171,7 @@
         .opcional {
             display: block;
             margin-top: 4px;
-            color: #9b8d91;
+            color: #697D88;
             font-size: 10px;
             line-height: 1.45;
         }
@@ -182,7 +185,7 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(-16px);
-            background: #4A3B3E;
+            background: var(--cor-azul-marinho);
             color: white;
             padding: 13px 22px;
             border-radius: 12px;
@@ -200,7 +203,7 @@
             opacity: 1;
             transform: translateX(-50%) translateY(0);
         }
-        .aviso-flutuante.erro { background: var(--cor-bordeaux); }
+        .aviso-flutuante.erro { background: var(--cor-vermelho); }
 
         button { 
             width: 100%; 
@@ -218,11 +221,11 @@
         }
         
         .btn-primario { 
-            background: linear-gradient(135deg, var(--cor-rose-gold), var(--cor-bordeaux)); 
-            color: white; 
-            box-shadow: 0 4px 15px rgba(122, 42, 70, 0.3);
+            background: linear-gradient(135deg, #CC4452, var(--cor-vermelho));
+            color: white;
+            box-shadow: 0 4px 15px rgba(176, 44, 58, 0.3);
         }
-        .btn-primario:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(122, 42, 70, 0.4); }
+        .btn-primario:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(176, 44, 58, 0.4); }
         .btn-primario:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
         
         .btn-wpp { background: #25D366; color: white; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); }
@@ -232,7 +235,7 @@
         .instrucao-compartilhamento { font-size: 12px; color: #777; line-height: 1.5; margin: 8px 0 0; }
 
         /* ========================================= */
-        /* NOVO DESIGN DA ROLETA (LUXO METÁLICO)     */
+        /* ROLETA PASSO FIRME (AZUL, VERMELHO E PRATA) */
         /* ========================================= */
         
         #roleta-container {
@@ -246,12 +249,12 @@
             max-width: 100%;
             aspect-ratio: 1 / 1;
             margin: 40px auto; 
-            /* Borda Metálica (Aro) usando gradiente cônico */
+            /* Aro metálico inspirado no azul-marinho e no vermelho da marca */
             background: conic-gradient(
-                #D4AF37, #FFF8D6, #D4AF37, #9B7B22, #D4AF37, #FFF8D6, #D4AF37
+                #0D2E46, #EAF0F3, #B02C3A, #8093A0, #0D2E46, #EAF0F3, #B02C3A
             );
             border-radius: 50%;
-            padding: 12px; /* Espessura da borda de ouro */
+            padding: 12px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.3), inset 0 3px 10px rgba(0,0,0,0.4);
             box-sizing: border-box;
         }
@@ -262,7 +265,7 @@
             height: 0; 
             border-left: 20px solid transparent;
             border-right: 20px solid transparent;
-            border-top: 35px solid var(--cor-bordeaux);
+            border-top: 35px solid var(--cor-vermelho);
             position: absolute;
             top: -22px;
             left: 50%;
@@ -277,7 +280,7 @@
             left: -12px;
             border-left: 12px solid transparent;
             border-right: 12px solid transparent;
-            border-top: 23px solid #FFFDF8;
+            border-top: 23px solid #F8FAFB;
         }
 
         /* O Canvas onde o Javascript desenha as fatias */
@@ -286,11 +289,11 @@
             height: 100%; 
             border-radius: 50%; /* Corta as fatias perfeitamente redondas */
             box-sizing: border-box;
-            border: 3px solid #FFFDF8; /* Separa visualmente do anel dourado em qualquer ângulo */
+            border: 3px solid #F8FAFB;
             display: block;
         }
 
-        /* O Pino Central com a Logo "C" */
+        /* Pino central com a assinatura PF */
         .centro-roleta {
             position: absolute;
             top: 50%;
@@ -298,10 +301,9 @@
             transform: translate(-50%, -50%);
             width: 75px;
             height: 75px;
-            /* Botão metálico Rose Gold/Nude */
-            background: radial-gradient(circle at 30% 30%, #FDF5E6, #C89B9A);
+            background: radial-gradient(circle at 30% 30%, #FFFFFF, #DCE6EB);
             border-radius: 50%;
-            border: 3px solid #D4AF37;
+            border: 3px solid var(--cor-azul-marinho);
             box-shadow: 0 5px 15px rgba(0,0,0,0.5), inset 0 2px 5px rgba(255,255,255,0.8);
             z-index: 5;
             display: flex;
@@ -310,17 +312,17 @@
             align-items: center;
         }
         
-        .centro-roleta .coroa {
-            font-size: 24px;
-            color: #4A3B3E; /* Coroa Escura */
-            margin-bottom: -12px;
+        .centro-roleta .icone-sapato {
+            font-size: 18px;
+            color: var(--cor-vermelho);
+            margin-bottom: -7px;
             line-height: 1;
         }
-        
-        .centro-roleta .letra-c {
+
+        .centro-roleta .letra-marca {
             font-family: 'Playfair Display', serif;
-            font-size: 42px;
-            color: #4A3B3E; /* Letra Escura */
+            font-size: 30px;
+            color: var(--cor-azul-marinho);
             font-weight: 700;
             line-height: 1;
         }
@@ -333,8 +335,8 @@
 
         .voucher-box {
             position: relative;
-            border: 2px dashed var(--cor-ouro);
-            background-color: #FFFDF8;
+            border: 2px dashed var(--cor-vermelho);
+            background-color: #F8FAFB;
             padding: 30px 20px;
             border-radius: 15px;
             margin-top: 20px;
@@ -351,8 +353,8 @@
             width: 46px;
             height: 46px;
             border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #FFF8D6, #D4AF37);
-            color: #4A3B3E;
+            background: radial-gradient(circle at 30% 30%, #D24A58, var(--cor-vermelho));
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -364,13 +366,13 @@
         .premio-texto {
             font-family: 'Playfair Display', serif;
             font-size: 28px;
-            color: var(--cor-bordeaux);
+            color: var(--cor-azul-marinho);
             margin: 15px 0;
             font-weight: 700;
         }
         .validade-voucher {
             font-size: 12px;
-            color: var(--cor-bordeaux);
+            color: var(--cor-vermelho);
             font-weight: 600;
             letter-spacing: 0.5px;
             margin-top: -10px !important;
@@ -381,9 +383,9 @@
             font-size: 13px;
             font-weight: 600;
             letter-spacing: 1.5px;
-            color: #4A3B3E;
-            background: #F4EFE6;
-            border: 1px solid #E6D9BE;
+            color: var(--cor-azul-marinho);
+            background: #EDF3F6;
+            border: 1px solid var(--cor-borda);
             padding: 5px 14px;
             border-radius: 20px;
             margin-top: 4px !important;
@@ -398,7 +400,7 @@
     <div class="conteudo-interno">
         <div id="etapa-1" class="etapa">
             <h2>Gire e Ganhe</h2>
-            <p>Preencha seus dados e insira o convite dourado para revelar seu prêmio exclusivo.</p>
+            <p>Preencha seus dados e insira seu convite exclusivo para revelar o prêmio.</p>
 
             <div class="campo-flutuante" id="campo-nome">
                 <input type="text" id="nome" placeholder=" " required>
@@ -449,8 +451,8 @@
                 <div class="seta-roleta"></div>
                 
                 <div class="centro-roleta">
-                    <div class="coroa">♔</div>
-                    <div class="letra-c">C</div>
+                    <div class="icone-sapato" aria-hidden="true">👠</div>
+                    <div class="letra-marca">PF</div>
                 </div>
 
                 <canvas id="canvasRoleta" width="350" height="350">
@@ -476,7 +478,7 @@
         <div id="etapa-4" class="etapa">
             <div class="voucher-box">
                 <div class="selo-voucher">✓</div>
-                <h3 style="color: var(--cor-ouro); font-size: 20px; text-transform: uppercase; letter-spacing: 2px;">Voucher Liberado</h3>
+                <h3 style="color: var(--cor-vermelho); font-size: 20px; text-transform: uppercase; letter-spacing: 2px;">Voucher Liberado</h3>
                 <p>Apresente esta tela no caixa para retirar o seu presente.</p>
                 <div class="premio-texto" id="nome-premio-final"></div>
                 <p class="validade-voucher" id="validade-voucher"></p>
@@ -775,7 +777,7 @@
             document.getElementById("roleta-visual").classList.add("blur-effect");
             document.getElementById("etapa-2").style.display = "block";
 
-            await CappriRoletaLayout.aguardarLayout();
+            await RoletaLayout.aguardarLayout();
             montarRoleta(premios);
         } catch (erro) {
             document.getElementById("etapa-1").style.display = "block";
@@ -832,7 +834,7 @@
         const wrapper = document.getElementById('roleta-visual');
         const canvasRoleta = document.getElementById('canvasRoleta');
         const larguraDisponivel = wrapper.parentElement.getBoundingClientRect().width;
-        const dimensoes = CappriRoletaLayout.calcularDimensoesRoleta(
+        const dimensoes = RoletaLayout.calcularDimensoesRoleta(
             larguraDisponivel,
             window.devicePixelRatio
         );
@@ -852,14 +854,14 @@
         // escalamos as demais medidas (fonte, margem, espessura da
         // linha) na mesma proporção da nova resolução.
         const paleta = [
-            { fundo: '#FDF5E6', texto: '#4A3B3E' },
-            { fundo: '#4A3B3E', texto: '#FDF5E6' },
-            { fundo: '#C89B9A', texto: '#4A3B3E' },
-            { fundo: '#E6C8C7', texto: '#4A3B3E' }
+            { fundo: '#F3F6F8', texto: '#0D2E46' },
+            { fundo: '#0D2E46', texto: '#FFFFFF' },
+            { fundo: '#DCE6EB', texto: '#0D2E46' },
+            { fundo: '#B02C3A', texto: '#FFFFFF' }
         ];
         const segmentos = premios.map((premio, indice) => {
             const cores = indice === premios.length - 1
-                ? { fundo: '#D4AF37', texto: '#FFFFFF' }
+                ? { fundo: '#B02C3A', texto: '#FFFFFF' }
                 : paleta[indice % paleta.length];
             return {
                 fillStyle: cores.fundo,
@@ -876,7 +878,7 @@
             'textFontFamily': 'Montserrat',
             'textMargin': 15 * escala,
             'lineWidth': 1.5 * escala,
-            'strokeStyle': '#D4AF37', 
+            'strokeStyle': '#D8E1E6',
             'segments': segmentos,
             'animation': {
                 'type': 'spinToStop',
@@ -991,7 +993,7 @@
                 spread: 80,
                 startVelocity: 42,
                 gravity: 0.9,
-                colors: ["#D4AF37", "#C89B9A", "#7A2A46", "#FFF8D6"],
+                colors: ["#0D2E46", "#B02C3A", "#DCE6EB", "#FFFFFF"],
                 origin: { y: 0.55 }
             });
         }

@@ -44,7 +44,7 @@ test("exibe o contêiner antes de medir e montar a roleta", () => {
     const funcao = html.slice(inicio, fim);
 
     const exibir = funcao.indexOf('document.getElementById("roleta-container").style.display = "block"');
-    const aguardar = funcao.indexOf("await CappriRoletaLayout.aguardarLayout()");
+    const aguardar = funcao.indexOf("await RoletaLayout.aguardarLayout()");
     const montar = funcao.indexOf("montarRoleta(premios)");
 
     assert.ok(exibir >= 0, "o contêiner precisa ser exibido");
@@ -129,10 +129,10 @@ test("separa ciência de privacidade da autorização opcional de aniversário",
 test("publica aviso de privacidade com identificação e canal da empresa", () => {
     const html = fs.readFileSync(path.join(__dirname, "..", "privacidade.html"), "utf8");
 
-    assert.match(html, /Uze Cappri Ltda/);
-    assert.match(html, /66\.278\.427\/0001-64/);
-    assert.match(html, /uzecappri@gmail\.com/);
-    assert.match(html, /5577992081605/);
+    assert.match(html, /Passo Firme Ltda/);
+    assert.match(html, /03\.190\.202\/0001-31/);
+    assert.match(html, /calcadospassofirme@hotmail\.com/);
+    assert.match(html, /5538991595150/);
     assert.match(html, /Versão 1\.0/);
     assert.match(html, /18 anos ou mais/);
     assert.match(html, /revogar/i);
@@ -146,4 +146,17 @@ test("administração mostra aniversários e permite revogar a autorização", (
     assert.match(html, /data-revoke-birthday/);
     assert.match(html, /revogar-aniversario/);
     assert.match(html, /politica_privacidade_versao/);
+});
+
+test("usa a identidade visual e as chaves de sessão exclusivas da Passo Firme", () => {
+    const arquivos = ["index.html", "caixa.html", "admin.html", "privacidade.html"];
+    const conteudo = arquivos
+        .map(arquivo => fs.readFileSync(path.join(__dirname, "..", arquivo), "utf8"))
+        .join("\n");
+
+    assert.match(conteudo, /#0d2e46/i);
+    assert.match(conteudo, /#b02c3a/i);
+    assert.match(conteudo, /passo_firme_admin_session/);
+    assert.match(conteudo, /passo_firme_senha_equipe/);
+    assert.doesNotMatch(conteudo, /cappri/i);
 });
