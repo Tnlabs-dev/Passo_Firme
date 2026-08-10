@@ -6,6 +6,7 @@ const path = require("node:path");
 const {
     calcularDimensoesRoleta
 } = require(path.join(__dirname, "..", "roleta-layout.js"));
+const lojaConfig = require(path.join(__dirname, "..", "config-loja.js"));
 
 test("calcula uma roleta de desktop com raio positivo", () => {
     const dimensoes = calcularDimensoesRoleta(320, 1);
@@ -149,7 +150,7 @@ test("administração mostra aniversários e permite revogar a autorização", (
 });
 
 test("usa a identidade visual e as chaves de sessão exclusivas da Passo Firme", () => {
-    const arquivos = ["index.html", "caixa.html", "admin.html", "privacidade.html"];
+    const arquivos = ["index.html", "caixa.html", "admin.html", "privacidade.html", "config-loja.js"];
     const conteudo = arquivos
         .map(arquivo => fs.readFileSync(path.join(__dirname, "..", arquivo), "utf8"))
         .join("\n");
@@ -159,4 +160,19 @@ test("usa a identidade visual e as chaves de sessão exclusivas da Passo Firme",
     assert.match(conteudo, /passo_firme_admin_session/);
     assert.match(conteudo, /passo_firme_senha_equipe/);
     assert.doesNotMatch(conteudo, /cappri/i);
+});
+
+test("centraliza os dados operacionais da Passo Firme", () => {
+    const arquivos = ["index.html", "caixa.html", "admin.html", "privacidade.html"];
+    const conteudo = arquivos
+        .map(arquivo => fs.readFileSync(path.join(__dirname, "..", arquivo), "utf8"))
+        .join("\n");
+
+    assert.equal(lojaConfig.nome, "Passo Firme");
+    assert.equal(lojaConfig.apiUrl, "https://roleta-api-passo-firme.onrender.com");
+    assert.equal(lojaConfig.voucherPrefix, "PFR");
+    assert.equal(lojaConfig.chavesSessao.administracao, "passo_firme_admin_session");
+    assert.match(conteudo, /config-loja\.js/);
+    assert.match(conteudo, /LojaConfig\.apiUrl/);
+    assert.match(conteudo, /LojaConfig\.chavesSessao/);
 });

@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <script src="config-loja.js"></script>
     <style>
         :root {
             --bordeaux: #0d2e46;
@@ -106,7 +107,7 @@
 <body>
     <header class="topbar">
         <div class="topbar-inner">
-            <div class="brand">Passo Firme</div>
+            <div class="brand" data-loja-nome>Passo Firme</div>
             <a class="back-link" href="index.html">← Voltar para a roleta</a>
         </div>
     </header>
@@ -115,7 +116,7 @@
         <div class="hero">
             <span class="eyebrow">Transparência e cuidado</span>
             <h1>Aviso de Privacidade</h1>
-            <p>Este aviso explica como a Passo Firme Ltda utiliza e protege os dados pessoais informados na roleta promocional e, quando você escolher, no programa de mensagens de aniversário.</p>
+            <p>Este aviso explica como a <span data-loja-razao-social>Passo Firme Ltda</span> utiliza e protege os dados pessoais informados na roleta promocional e, quando você escolher, no programa de mensagens de aniversário.</p>
             <span class="version">Versão 1.0 · vigente desde 5 de agosto de 2026</span>
         </div>
 
@@ -128,10 +129,10 @@
         <section>
             <h2>1. Quem é responsável pelos dados</h2>
             <address class="contact">
-                <div><strong>Controladora:</strong> <span>Passo Firme Ltda</span></div>
-                <div><strong>CNPJ:</strong> <span>03.190.202/0001-31</span></div>
-                <div><strong>E-mail:</strong> <span><a href="mailto:calcadospassofirme@hotmail.com">calcadospassofirme@hotmail.com</a></span></div>
-                <div><strong>WhatsApp:</strong> <span><a href="https://wa.me/5538991595150">(38) 99159-5150</a></span></div>
+                <div><strong>Controladora:</strong> <span data-loja-razao-social>Passo Firme Ltda</span></div>
+                <div><strong>CNPJ:</strong> <span data-loja-cnpj>03.190.202/0001-31</span></div>
+                <div><strong>E-mail:</strong> <span><a href="mailto:calcadospassofirme@hotmail.com" data-loja-email>calcadospassofirme@hotmail.com</a></span></div>
+                <div><strong>WhatsApp:</strong> <span><a href="https://wa.me/5538991595150" data-loja-whatsapp>(38) 99159-5150</a></span></div>
             </address>
             <p style="margin-top:14px">Esses contatos também são o canal para dúvidas e para o exercício de direitos relacionados aos seus dados.</p>
         </section>
@@ -195,7 +196,7 @@
         <section>
             <h2>8. Seus direitos</h2>
             <p>Você pode solicitar, conforme aplicável: confirmação e acesso; correção; informação sobre compartilhamentos; anonimização, bloqueio ou exclusão de dados desnecessários ou tratados irregularmente; portabilidade; oposição; revogação da autorização; e revisão de decisões tomadas unicamente por tratamento automatizado.</p>
-            <p>Para fazer uma solicitação, escreva para <a href="mailto:calcadospassofirme@hotmail.com">calcadospassofirme@hotmail.com</a> ou chame no <a href="https://wa.me/5538991595150">WhatsApp (38) 99159-5150</a>. Poderemos pedir informações proporcionais para confirmar a identidade e proteger o cadastro.</p>
+            <p>Para fazer uma solicitação, escreva para <a href="mailto:calcadospassofirme@hotmail.com" data-loja-email>calcadospassofirme@hotmail.com</a> ou chame no WhatsApp <a href="https://wa.me/5538991595150" data-loja-whatsapp>(38) 99159-5150</a>. Poderemos pedir informações proporcionais para confirmar a identidade e proteger o cadastro.</p>
         </section>
 
         <section>
@@ -208,7 +209,7 @@
             <p>Este aviso poderá ser atualizado para refletir mudanças na campanha, nos fornecedores ou na legislação. A versão e a data de vigência aparecerão no início da página. Quando uma alteração depender de nova autorização, ela será solicitada de forma separada.</p>
         </section>
 
-        <footer>Passo Firme Ltda · CNPJ 03.190.202/0001-31 · Aviso de Privacidade versão 1.0</footer>
+        <footer data-loja-rodape-privacidade>Passo Firme Ltda · CNPJ 03.190.202/0001-31 · Aviso de Privacidade versão 1.0</footer>
     </main>
 </body>
 </html>
