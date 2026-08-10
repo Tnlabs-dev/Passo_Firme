@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <script src="config-loja.js"></script>
     <style>
         :root {
             --vinho: #0d2e46;
@@ -381,7 +382,7 @@
 <body>
     <section class="login-shell" id="login-screen">
         <div class="login-brand">
-            <div class="brand-wordmark">PASSO FIRME</div>
+            <div class="brand-wordmark" data-loja-nome>PASSO FIRME</div>
             <div class="login-brand-copy">
                 <small>Gestão da campanha</small>
                 <h1>Decisões simples, operação sob controle.</h1>
@@ -390,7 +391,7 @@
         </div>
         <div class="login-panel">
             <form class="login-card" id="login-form">
-                <div class="mobile-wordmark">PASSO FIRME</div>
+                <div class="mobile-wordmark" data-loja-nome>PASSO FIRME</div>
                 <span class="eyebrow">Acesso restrito</span>
                 <h2>Área administrativa</h2>
                 <p>Use a senha exclusiva da administração. Ela é diferente da senha utilizada pela equipe para gerar convites.</p>
@@ -406,7 +407,7 @@
 
     <div class="app-shell" id="app" hidden>
         <aside class="sidebar" id="sidebar">
-            <div class="sidebar-logo"><strong>PASSO FIRME</strong><span>Administração</span></div>
+            <div class="sidebar-logo"><strong data-loja-nome>PASSO FIRME</strong><span>Administração</span></div>
             <div class="nav-label">Campanha</div>
             <nav class="nav-list" aria-label="Navegação principal">
                 <button class="nav-btn active" data-page="overview"><span class="nav-icon">⌂</span>Visão geral</button>
@@ -540,9 +541,9 @@
     <div class="loading-overlay" id="loading" hidden><div class="loader" aria-label="Carregando"></div></div>
 
     <script>
-        const URL_API = "https://roleta-api-passo-firme.onrender.com";
-        const ROLETA_URL = "https://tnlabs-dev.github.io/Passo_Firme/";
-        const SESSION_KEY = "passo_firme_admin_session";
+        const URL_API = LojaConfig.apiUrl;
+        const ROLETA_URL = LojaConfig.roletaUrl;
+        const SESSION_KEY = LojaConfig.chavesSessao.administracao;
 
         const state = {
             token: sessionStorage.getItem(SESSION_KEY) || "",

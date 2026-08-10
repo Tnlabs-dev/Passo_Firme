@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
+    <script src="config-loja.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
 
     <style>
@@ -170,7 +171,7 @@
 <body>
 
 <div class="painel">
-    <div class="marca-painel">PASSO FIRME</div>
+    <div class="marca-painel" data-loja-nome>PASSO FIRME</div>
 
     <div id="tela-senha">
         <h1>Gerar Convite</h1>
@@ -202,14 +203,14 @@
 
 <script>
     // Ajuste esses dois links se o domínio do backend ou da roleta mudar.
-    const URL_API = "https://roleta-api-passo-firme.onrender.com";
-    const URL_ROLETA = "https://tnlabs-dev.github.io/Passo_Firme/";
+    const URL_API = LojaConfig.apiUrl;
+    const URL_ROLETA = LojaConfig.roletaUrl;
     let linkClienteAtual = "";
 
     // Lembra a senha dentro da mesma aba/sessão do navegador, pra
     // vendedora não precisar redigitar a cada cliente — some sozinha
     // se fechar a aba.
-    const CHAVE_SENHA_EQUIPE = "passo_firme_senha_equipe";
+    const CHAVE_SENHA_EQUIPE = LojaConfig.chavesSessao.equipe;
     const senhaMemorizada = sessionStorage.getItem(CHAVE_SENHA_EQUIPE);
     if (senhaMemorizada) {
         document.getElementById("senha").value = senhaMemorizada;
