@@ -183,6 +183,21 @@
         .nav-btn.active { color: white; background: rgba(255,255,255,.14); box-shadow: inset 3px 0 #d84b5a; }
         .nav-icon { width: 22px; text-align: center; font-size: 17px; }
         .sidebar-foot { margin-top: auto; padding: 16px 12px 0; border-top: 1px solid rgba(255,255,255,.1); color: rgba(255,255,255,.55); font-size: 11px; line-height: 1.6; }
+        .sidebar-help {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 9px 10px;
+            border: 1px solid rgba(255,255,255,.15);
+            border-radius: 9px;
+            color: white;
+            background: rgba(255,255,255,.08);
+            font-size: 12px;
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .sidebar-help:hover { background: rgba(255,255,255,.14); }
 
         .main { min-height: 100vh; margin-left: var(--sidebar); }
         .topbar {
@@ -417,7 +432,7 @@
                 <button class="nav-btn" data-page="campaign"><span class="nav-icon">⚙</span>Configurar campanha</button>
                 <button class="nav-btn" data-page="audit"><span class="nav-icon">↻</span>Histórico</button>
             </nav>
-            <div class="sidebar-foot">Sessão protegida e temporária.<br>Dados sensíveis não ficam em cache.<br><a href="privacidade.html" target="_blank" rel="noopener" style="color:#f3c4ca">Aviso de Privacidade</a></div>
+            <div class="sidebar-foot"><a class="sidebar-help" href="manual-roleta.pdf" target="_blank" rel="noopener"><span aria-hidden="true">?</span> Abrir manual da roleta</a>Sessão protegida e temporária.<br>Dados sensíveis não ficam em cache.<br><a href="privacidade.html" target="_blank" rel="noopener" style="color:#f3c4ca">Aviso de Privacidade</a></div>
         </aside>
 
         <main class="main">
@@ -430,6 +445,7 @@
                     </div>
                 </div>
                 <div class="topbar-actions">
+                    <a class="btn btn-secondary btn-sm" href="manual-roleta.pdf" target="_blank" rel="noopener" aria-label="Abrir manual operacional da roleta"><span aria-hidden="true">?</span><span class="hide-mobile">Manual</span></a>
                     <button class="btn btn-secondary btn-sm" id="refresh-button"><span>↻</span><span class="hide-mobile">Atualizar</span></button>
                     <button class="btn btn-secondary btn-sm" id="logout-button"><span>↪</span><span class="hide-mobile">Sair</span></button>
                 </div>
