@@ -208,3 +208,14 @@ test("centraliza os dados operacionais da Passo Firme", () => {
     assert.match(conteudo, /LojaConfig\.apiUrl/);
     assert.match(conteudo, /LojaConfig\.chavesSessao/);
 });
+
+test("oferece o manual operacional dentro da área administrativa", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "admin.html"), "utf8");
+    const manual = fs.readFileSync(path.join(__dirname, "..", "manual-roleta.pdf"));
+    const atalhos = html.match(/href="manual-roleta\.pdf"/g) || [];
+
+    assert.equal(atalhos.length, 2);
+    assert.match(html, /Abrir manual da roleta/);
+    assert.match(html, /aria-label="Abrir manual operacional da roleta"/);
+    assert.equal(manual.subarray(0, 4).toString("ascii"), "%PDF");
+});
