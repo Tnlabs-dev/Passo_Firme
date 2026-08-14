@@ -219,3 +219,30 @@ test("oferece o manual operacional dentro da área administrativa", () => {
     assert.match(html, /aria-label="Abrir manual operacional da roleta"/);
     assert.equal(manual.subarray(0, 4).toString("ascii"), "%PDF");
 });
+
+test("protege a limpeza de participantes com backup e confirmação reforçada", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "admin.html"), "utf8");
+    const inicio = html.indexOf("async function prepareParticipantCleanup()");
+    const fim = html.indexOf('el("login-form")', inicio);
+    const funcao = html.slice(inicio, fim);
+
+    assert.match(html, /<details class="danger-zone">/);
+    assert.match(html, /id="prepare-cleanup-button"/);
+    assert.match(funcao, /await exportCsv\(\{ notify: false \}\)/);
+    assert.match(funcao, /cleanup-backup-confirmed/);
+    assert.match(funcao, /value !== "EXCLUIR"/);
+    assert.match(funcao, /method: "DELETE"/);
+    assert.match(funcao, /total_esperado: backup\.total/);
+    assert.ok(
+        funcao.indexOf("await exportCsv") < funcao.indexOf('method: "DELETE"'),
+        "o backup precisa ocorrer antes da exclusão"
+    );
+    assert.match(html, /X-Total-Registros/);
+});
+
+test("usa texto de senha compatível com a configuração da loja", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "admin.html"), "utf8");
+
+    assert.match(html, /Use a senha de acesso configurada para esta loja/);
+    assert.doesNotMatch(html, /diferente da senha utilizada pela equipe/i);
+});
