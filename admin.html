@@ -413,7 +413,7 @@
                 <button class="nav-btn active" data-page="overview"><span class="nav-icon">⌂</span>Visão geral</button>
                 <button class="nav-btn" data-page="prizes"><span class="nav-icon">◇</span>Prêmios e estoque</button>
                 <button class="nav-btn" data-page="participants"><span class="nav-icon">♙</span>Participantes</button>
-                <button class="nav-btn" data-page="invites"><span class="nav-icon">▱</span>Convites</button>
+                <button class="nav-btn" data-page="invites"><span class="nav-icon">▱</span>Códigos de acesso</button>
                 <button class="nav-btn" data-page="campaign"><span class="nav-icon">⚙</span>Configurar campanha</button>
                 <button class="nav-btn" data-page="audit"><span class="nav-icon">↻</span>Histórico</button>
             </nav>
@@ -439,7 +439,7 @@
                 <section class="page active" id="page-overview">
                     <div class="page-header">
                         <div><h1>Visão geral</h1><p>O essencial da campanha, atualizado diretamente do banco.</p></div>
-                        <div class="header-actions"><a class="btn btn-primary" href="caixa.html">＋ Gerar convite</a></div>
+                        <div class="header-actions"><a class="btn btn-secondary" href="qrcode.html" target="_blank" rel="noopener">▦ Imprimir QR fixo</a><a class="btn btn-primary" href="caixa.html">＋ Gerar código</a></div>
                     </div>
                     <div id="campaign-banner"></div>
                     <div class="metrics-grid" id="metrics-grid"></div>
@@ -484,12 +484,12 @@
 
                 <section class="page" id="page-invites">
                     <div class="page-header">
-                        <div><h1>Convites</h1><p>Acompanhe os acessos e invalide convites enviados por engano.</p></div>
-                        <div class="header-actions"><a class="btn btn-primary" href="caixa.html">＋ Gerar convite</a></div>
+                        <div><h1>Códigos de acesso</h1><p>Acompanhe os códigos temporários, seus vencimentos e utilizações.</p></div>
+                        <div class="header-actions"><a class="btn btn-secondary" href="qrcode.html" target="_blank" rel="noopener">▦ Imprimir QR fixo</a><a class="btn btn-primary" href="caixa.html">＋ Gerar código</a></div>
                     </div>
                     <div class="toolbar"><div class="filters">
-                        <div class="search-box"><input id="invite-search" type="search" placeholder="Buscar pelo código do convite"></div>
-                        <select class="filter-select" id="invite-status"><option value="all">Todos os status</option><option value="pending">Pendentes</option><option value="used">Utilizados</option><option value="cancelled">Cancelados</option></select>
+                        <div class="search-box"><input id="invite-search" type="search" placeholder="Buscar pelo código de 6 dígitos"></div>
+                        <select class="filter-select" id="invite-status"><option value="all">Todos os status</option><option value="pending">Pendentes</option><option value="used">Utilizados</option><option value="expired">Expirados</option><option value="cancelled">Cancelados</option></select>
                     </div></div>
                     <div class="table-card"><div class="table-scroll"><table>
                         <thead><tr><th>Código</th><th>Criado em</th><th>Status</th><th>Atualização</th><th></th></tr></thead>
@@ -526,7 +526,7 @@
             <button class="active" data-page="overview"><span>⌂</span>Resumo</button>
             <button data-page="prizes"><span>◇</span>Prêmios</button>
             <button data-page="participants"><span>♙</span>Clientes</button>
-            <button data-page="invites"><span>▱</span>Convites</button>
+            <button data-page="invites"><span>▱</span>Códigos</button>
             <button data-page="campaign"><span>⚙</span>Ajustes</button>
         </nav>
     </div>
@@ -542,7 +542,6 @@
 
     <script>
         const URL_API = LojaConfig.apiUrl;
-        const ROLETA_URL = LojaConfig.roletaUrl;
         const SESSION_KEY = LojaConfig.chavesSessao.administracao;
 
         const state = {
@@ -698,12 +697,12 @@
             const period = campaign ? `${formatDate(campaign.data_inicio, false)} até ${formatDate(campaign.data_fim, false)}` : "Período não definido";
             el("campaign-banner").innerHTML = `<div class="campaign-banner"><div><strong>${escapeHtml(campaign?.nome || "Nenhuma campanha")}</strong><small>${escapeHtml(period)}</small></div>${badge(activeStatus.label, activeStatus.cls)}</div>`;
 
-            const validInvites = Math.max(0, Number(metrics.convites_total || 0) - Number(metrics.convites_cancelados || 0));
+            const validInvites = Math.max(0, Number(metrics.convites_total || 0) - Number(metrics.convites_cancelados || 0) - Number(metrics.convites_expirados || 0));
             const conversion = validInvites ? (Number(metrics.participantes || 0) / validInvites) * 100 : 0;
             const redemption = Number(metrics.participantes || 0) ? (Number(metrics.premios_resgatados || 0) / Number(metrics.participantes)) * 100 : 0;
             const cards = [
                 ["Participantes", formatNumber(metrics.participantes), `${conversion.toFixed(1).replace(".", ",")}% dos convites válidos`, "#f7e6e8"],
-                ["Convites pendentes", formatNumber(metrics.convites_pendentes), `${formatNumber(metrics.convites_total)} gerados no total`, "#fff4d8"],
+                ["Códigos pendentes", formatNumber(metrics.convites_pendentes), `${formatNumber(metrics.convites_expirados)} expirados · ${formatNumber(metrics.convites_total)} no total`, "#fff4d8"],
                 ["Estoque disponível", formatNumber(metrics.estoque_total), "itens ativos na campanha", "#e8f1f8"],
                 ["Prêmios resgatados", formatNumber(metrics.premios_resgatados), `${redemption.toFixed(1).replace(".", ",")}% dos vouchers`, "#e6f4ee"]
             ];
@@ -778,22 +777,25 @@
         function filteredInvites() {
             const query = normalize(el("invite-search").value);
             const status = el("invite-status").value;
-            const statusMap = { pending: "pendente", used: "utilizado", cancelled: "cancelado" };
+            const statusMap = { pending: "pendente", used: "utilizado", expired: "expirado", cancelled: "cancelado" };
             return (state.painel.convites || []).filter(invite => {
-                return (!query || normalize(invite.token).includes(query)) && (status === "all" || invite.status === statusMap[status]);
+                const codigo = invite.codigo || invite.token || "";
+                return (!query || normalize(codigo).includes(query)) && (status === "all" || invite.status === statusMap[status]);
             });
         }
 
         function renderInvites() {
             const invites = filteredInvites();
             const statusMap = {
-                pendente: ["Pendente", "badge-yellow"], utilizado: ["Utilizado", "badge-green"], cancelado: ["Cancelado", "badge-red"]
+                pendente: ["Pendente", "badge-yellow"], utilizado: ["Utilizado", "badge-green"], expirado: ["Expirado", "badge-gray"], cancelado: ["Cancelado", "badge-red"]
             };
             el("invites-table").innerHTML = invites.length ? invites.map(invite => {
+                const codigo = invite.codigo || invite.token || "";
                 const current = statusMap[invite.status] || [invite.status, "badge-gray"];
                 const updated = invite.utilizado_em || invite.cancelado_em;
-                return `<tr><td><span class="cell-code">${escapeHtml(invite.token)}</span></td><td>${formatDate(invite.data_criacao)}</td><td>${badge(current[0], current[1])}</td><td>${formatDate(updated)}</td><td><div class="actions-cell">
-                    <button class="btn btn-secondary btn-sm" data-copy-invite="${escapeHtml(invite.token)}">Copiar link</button>
+                const timeline = updated ? formatDate(updated) : `Expira em ${formatDate(invite.expira_em)}`;
+                return `<tr><td><span class="cell-code">${escapeHtml(codigo)}</span></td><td>${formatDate(invite.data_criacao)}</td><td>${badge(current[0], current[1])}</td><td>${timeline}</td><td><div class="actions-cell">
+                    <button class="btn btn-secondary btn-sm" data-copy-invite="${escapeHtml(codigo)}">Copiar código</button>
                     ${invite.status === "pendente" ? `<button class="btn btn-danger btn-sm" data-cancel-invite="${invite.id}">Cancelar</button>` : ""}
                 </div></td></tr>`;
             }).join("") : tableEmpty(5, "Nenhum convite encontrado", "▱");
@@ -985,7 +987,7 @@
             }
 
             const copyInvite = event.target.closest("[data-copy-invite]");
-            if (copyInvite) { await copyText(`${ROLETA_URL}?token=${encodeURIComponent(copyInvite.dataset.copyInvite)}`); toast("Link copiado."); }
+            if (copyInvite) { await copyText(copyInvite.dataset.copyInvite); toast("Código copiado."); }
 
             const cancelInvite = event.target.closest("[data-cancel-invite]");
             if (cancelInvite) {

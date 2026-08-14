@@ -401,7 +401,7 @@
     <div class="conteudo-interno">
         <div id="etapa-1" class="etapa">
             <h2>Gire e Ganhe</h2>
-            <p>Preencha seus dados e insira seu convite exclusivo para revelar o prêmio.</p>
+            <p>Escaneie o QR Code da loja, preencha seus dados e informe o código temporário entregue no caixa.</p>
 
             <div class="campo-flutuante" id="campo-nome">
                 <input type="text" id="nome" placeholder=" " required>
@@ -423,13 +423,14 @@
             </div>
 
             <div class="campo-flutuante" id="campo-token">
-                <input type="text" id="token" placeholder=" " required>
-                <label for="token">Código de Autorização</label>
-                <span class="mensagem-erro">Verifique o código informado.</span>
+                <input type="text" id="token" placeholder=" " inputmode="numeric" maxlength="6" autocomplete="one-time-code" pattern="[0-9]{6}" required>
+                <label for="token">Código de 6 dígitos</label>
+                <span class="opcional">Peça este código no caixa. Ele é temporário e vale para uma participação.</span>
+                <span class="mensagem-erro">Digite os 6 números informados no caixa.</span>
             </div>
 
             <div class="aviso-privacidade">
-                Usaremos seu nome, WhatsApp e os dados da participação para validar o convite, realizar o sorteio, registrar e entregar o prêmio.
+                Usaremos seu nome, WhatsApp e os dados da participação para validar o código temporário, realizar o sorteio, registrar e entregar o prêmio.
                 <a href="privacidade.html" target="_blank" rel="noopener">Leia o Aviso de Privacidade completo.</a>
             </div>
 
@@ -497,13 +498,12 @@
     let codigoVoucher = "";
     let campanhaAtual = "";
 
-    // Se o link veio de um QR code gerado no caixa, o código já chega
-    // pronto na URL (?token=...) — preenche sozinho, sem a cliente
-    // precisar digitar nada.
+    // Convites antigos enviados por link continuam válidos durante a
+    // transição. O QR Code permanente da loja abre a página sem token.
     const parametrosDaUrl = new URLSearchParams(window.location.search);
-    const tokenDaUrl = parametrosDaUrl.get("token");
-    if (tokenDaUrl) {
-        document.getElementById("token").value = tokenDaUrl;
+    const tokenLegadoDaUrl = parametrosDaUrl.get("token");
+    if (tokenLegadoDaUrl) {
+        document.getElementById("token").value = tokenLegadoDaUrl;
     }
 
     // Quantos dias o voucher vale a partir do momento em que é gerado.
@@ -682,6 +682,10 @@
         e.target.value = aplicarMascaraWhatsapp(e.target.value);
     });
 
+    document.getElementById("token").addEventListener("input", function (e) {
+        e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6);
+    });
+
     function dataLimiteMaioridade() {
         const hoje = new Date();
         const limite = new Date(hoje.getFullYear() - 18, hoje.getMonth(), hoje.getDate());
@@ -698,7 +702,12 @@
 
         const nome = document.getElementById("nome").value.trim();
         const zap = document.getElementById("whatsapp").value;
-        const token = document.getElementById("token").value.trim();
+        const valorCodigo = document.getElementById("token").value.trim();
+        const token = tokenLegadoDaUrl && valorCodigo === tokenLegadoDaUrl
+            ? tokenLegadoDaUrl
+            : valorCodigo.replace(/\D/g, "");
+        const ehCodigoCurto = /^\d{6}$/.test(token);
+        const ehConviteLegado = Boolean(tokenLegadoDaUrl && token === tokenLegadoDaUrl);
         const cienciaPrivacidade = document.getElementById("ciencia-privacidade").checked;
         const dataNascimento = document.getElementById("data-nascimento").value;
         const consentimentoAniversario = document.getElementById("consentimento-aniversario").checked;
@@ -716,7 +725,7 @@
             temErro = true;
         }
 
-        if (!token) {
+        if (!ehCodigoCurto && !ehConviteLegado) {
             marcarErro("campo-token", true);
             temErro = true;
         }
@@ -758,12 +767,13 @@
         botaoAcessar.innerText = "Verificando...";
 
         try {
-            const resposta = await fetch(`${URL_API}/verificar-token/${token}`);
+            const rotaVerificacao = ehCodigoCurto ? "verificar-codigo" : "verificar-token";
+            const resposta = await fetch(`${URL_API}/${rotaVerificacao}/${encodeURIComponent(token)}`);
             const dados = await resposta.json();
 
             if (!resposta.ok || !dados.valido) {
                 marcarErro("campo-token", true);
-                mostrarAviso(dados.mensagem || dados.detail || "Este convite não é válido.", "erro");
+                mostrarAviso(dados.mensagem || dados.detail || "Este código não é válido.", "erro");
                 return;
             }
 

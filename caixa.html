@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 
     <script src="config-loja.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
 
     <style>
         :root {
@@ -98,51 +97,24 @@
             border: 2px solid var(--cor-azul-marinho);
             padding: 13px;
         }
-        #tela-qr { display: none; }
-        #qrcode-wrapper {
-            display: flex;
-            justify-content: center;
-            margin: 8px 0 20px 0;
-        }
-        .token-texto {
+        #tela-codigo { display: none; }
+        .codigo-texto {
             font-family: 'Courier New', monospace;
-            font-size: 17px;
-            letter-spacing: 1.5px;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 6px;
             background: #EDF3F6;
             border: 1px solid var(--cor-borda);
             border-radius: 10px;
-            padding: 10px;
-            margin-bottom: 4px;
-            word-break: break-all;
+            padding: 18px 10px;
+            margin: 12px 0 8px;
+            color: var(--cor-azul-marinho);
         }
-        .legenda-token {
-            font-size: 11px;
-            color: #aaa;
-            margin: 0 0 20px 0;
-        }
-        .compartilhar-convite {
-            margin-top: 22px;
-            padding-top: 20px;
-            border-top: 1px solid var(--cor-borda);
-            text-align: left;
-        }
-        .compartilhar-convite label {
-            display: block;
-            margin-bottom: 7px;
-            color: var(--cor-texto);
+        .validade-codigo {
             font-size: 12px;
-            font-weight: 600;
-        }
-        .compartilhar-convite input {
-            margin: 0;
-            padding: 12px;
-            background: #F7FAFB;
-            color: var(--cor-texto);
-            font-size: 12px;
-            text-overflow: ellipsis;
-        }
-        .compartilhar-convite button {
-            margin-top: 10px;
+            color: #777;
+            line-height: 1.6;
+            margin: 0 0 14px;
         }
         .retorno-copia {
             min-height: 16px;
@@ -166,6 +138,18 @@
             text-decoration: none;
         }
         .link-admin:hover { text-decoration: underline; }
+        .atalho-qr {
+            display: block;
+            margin-top: 14px;
+            padding: 12px;
+            border: 1px solid var(--cor-borda);
+            border-radius: 10px;
+            color: var(--cor-azul-marinho);
+            background: #F7FAFB;
+            font-size: 12px;
+            font-weight: 600;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -174,27 +158,24 @@
     <div class="marca-painel" data-loja-nome>PASSO FIRME</div>
 
     <div id="tela-senha">
-        <h1>Gerar Convite</h1>
-        <p class="subtitulo">Uso interno — Equipe </p>
+        <h1>Liberar Participação</h1>
+        <p class="subtitulo">Uso interno — gere um código depois de confirmar a compra.</p>
         <input type="password" id="senha" placeholder="Senha da equipe" inputmode="numeric" autocomplete="off">
         <p class="aviso-erro" id="erro-senha"></p>
-        <button id="botao-gerar" onclick="gerarConvite()">Gerar Convite</button>
+        <button id="botao-gerar" onclick="gerarConvite()">Gerar Código</button>
+        <a class="atalho-qr" href="qrcode.html" target="_blank" rel="noopener">Imprimir QR Code fixo da loja</a>
     </div>
 
-    <div id="tela-qr">
-        <h1>Convite Pronto</h1>
-        <p class="subtitulo">Peça pra cliente escanear com a câmera do celular dela</p>
-        <div id="qrcode-wrapper"></div>
-        <div class="token-texto" id="token-texto"></div>
-        <p class="legenda-token">Código de reserva, caso o QR não funcione</p>
-        <p class="legenda-token" id="nome-campanha"></p>
-        <div class="compartilhar-convite">
-            <label for="link-cliente">Link da cliente</label>
-            <input id="link-cliente" type="text" readonly aria-describedby="retorno-copia">
-            <button class="secundario" id="botao-copiar-link" type="button" onclick="copiarLinkCliente()">Copiar Link</button>
-            <p class="retorno-copia" id="retorno-copia" role="status" aria-live="polite"></p>
-        </div>
-        <button onclick="reiniciar()">Gerar Novo Convite</button>
+    <div id="tela-codigo">
+        <h1>Código Liberado</h1>
+        <p class="subtitulo">Informe estes seis números à cliente.</p>
+        <div class="codigo-texto" id="codigo-texto"></div>
+        <p class="validade-codigo" id="validade-codigo"></p>
+        <p class="validade-codigo" id="nome-campanha"></p>
+        <button class="secundario" id="botao-copiar-codigo" type="button" onclick="copiarCodigo()">Copiar Código</button>
+        <p class="retorno-copia" id="retorno-copia" role="status" aria-live="polite"></p>
+        <button onclick="reiniciar()">Gerar Novo Código</button>
+        <a class="atalho-qr" href="qrcode.html" target="_blank" rel="noopener">Abrir QR Code fixo para impressão</a>
     </div>
 
     <a class="link-admin" href="admin.html">Acessar área administrativa</a>
@@ -202,10 +183,8 @@
 </div>
 
 <script>
-    // Ajuste esses dois links se o domínio do backend ou da roleta mudar.
     const URL_API = LojaConfig.apiUrl;
-    const URL_ROLETA = LojaConfig.roletaUrl;
-    let linkClienteAtual = "";
+    let codigoAtual = "";
 
     // Lembra a senha dentro da mesma aba/sessão do navegador, pra
     // vendedora não precisar redigitar a cada cliente — some sozinha
@@ -246,79 +225,67 @@
                 // economia de energia, não um problema real de conexão.
                 erro.innerText = "O servidor ainda está iniciando (comum na primeira chamada depois de um tempo parado). Aguarde uns 20-30 segundos e tente de novo.";
                 botao.disabled = false;
-                botao.innerText = "Gerar Convite";
+                botao.innerText = "Gerar Código";
                 return;
             }
 
             if (!resposta.ok) {
                 erro.innerText = dados.detail || "Não foi possível gerar o convite.";
                 botao.disabled = false;
-                botao.innerText = "Gerar Convite";
+                botao.innerText = "Gerar Código";
                 return;
             }
 
-            // A partir daqui o convite JÁ EXISTE no banco de dados —
-            // mesmo que o desenho do QR falhe por algum motivo (ex: a
-            // biblioteca não carregou), o código não pode se perder.
             sessionStorage.setItem(CHAVE_SENHA_EQUIPE, senha);
-            exibirConvite(dados.token, dados.campanha);
+            exibirCodigo(
+                dados.codigo || dados.token,
+                dados.campanha,
+                dados.expira_em,
+                dados.validade_minutos
+            );
 
         } catch (e) {
             erro.innerText = "Erro de conexão. Verifique a internet e tente de novo.";
         }
 
         botao.disabled = false;
-        botao.innerText = "Gerar Convite";
+        botao.innerText = "Gerar Código";
     }
 
-    function exibirConvite(token, campanha) {
-        linkClienteAtual = `${URL_ROLETA}?token=${encodeURIComponent(token)}`;
-        document.getElementById("token-texto").innerText = token;
-        document.getElementById("link-cliente").value = linkClienteAtual;
+    function exibirCodigo(codigo, campanha, expiraEm, validadeMinutos) {
+        codigoAtual = String(codigo || "").replace(/\D/g, "");
+        const codigoFormatado = codigoAtual.length === 6
+            ? `${codigoAtual.slice(0, 3)} ${codigoAtual.slice(3)}`
+            : codigoAtual;
+        document.getElementById("codigo-texto").innerText = codigoFormatado;
         document.getElementById("retorno-copia").innerText = "";
         document.getElementById("nome-campanha").innerText = campanha
             ? `Campanha: ${campanha}`
             : "";
+
+        const expiracao = expiraEm ? new Date(expiraEm) : null;
+        const horario = expiracao && !Number.isNaN(expiracao.getTime())
+            ? expiracao.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+            : "o horário informado";
+        document.getElementById("validade-codigo").innerText =
+            `Válido por ${validadeMinutos || 30} minutos, até ${horario}. Depois disso, gere outro código.`;
+
         document.getElementById("tela-senha").style.display = "none";
-        document.getElementById("tela-qr").style.display = "block";
-
-        const wrapper = document.getElementById("qrcode-wrapper");
-        wrapper.innerHTML = "";
-
-        // O desenho do QR é tratado à parte: se falhar (ex: a
-        // biblioteca não carregou por algum motivo), a vendedora ainda
-        // consegue usar o código de texto abaixo normalmente.
-        try {
-            if (typeof QRCode === "undefined") {
-                throw new Error("Biblioteca de QR code não carregada.");
-            }
-            const canvas = document.createElement("canvas");
-            wrapper.appendChild(canvas);
-            QRCode.toCanvas(canvas, linkClienteAtual, {
-                width: 220,
-                margin: 1,
-                color: { dark: "#0D2E46", light: "#FFFFFF" }
-            });
-        } catch (erroQr) {
-            wrapper.innerHTML =
-                '<p style="font-size:12px;color:#A83246;max-width:220px;">' +
-                "Não foi possível desenhar o QR agora — use o código abaixo com a cliente." +
-                "</p>";
-        }
+        document.getElementById("tela-codigo").style.display = "block";
     }
 
-    async function copiarLinkCliente() {
-        if (!linkClienteAtual) return;
+    async function copiarCodigo() {
+        if (!codigoAtual) return;
 
         const retorno = document.getElementById("retorno-copia");
-        const botao = document.getElementById("botao-copiar-link");
+        const botao = document.getElementById("botao-copiar-codigo");
 
         try {
             if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(linkClienteAtual);
+                await navigator.clipboard.writeText(codigoAtual);
             } else {
                 const campoTemporario = document.createElement("textarea");
-                campoTemporario.value = linkClienteAtual;
+                campoTemporario.value = codigoAtual;
                 campoTemporario.setAttribute("readonly", "");
                 campoTemporario.style.position = "fixed";
                 campoTemporario.style.opacity = "0";
@@ -329,21 +296,19 @@
                 if (!copiado) throw new Error("Cópia não autorizada pelo navegador.");
             }
 
-            retorno.innerText = "Link copiado! Agora é só colar na conversa com a cliente.";
-            botao.innerText = "Link Copiado";
-            window.setTimeout(() => { botao.innerText = "Copiar Link"; }, 2200);
+            retorno.innerText = "Código copiado.";
+            botao.innerText = "Código Copiado";
+            window.setTimeout(() => { botao.innerText = "Copiar Código"; }, 2200);
         } catch (erroCopia) {
-            document.getElementById("link-cliente").focus();
-            document.getElementById("link-cliente").select();
-            retorno.innerText = "Não foi possível copiar automaticamente. O link foi selecionado para você copiar.";
+            retorno.innerText = "Não foi possível copiar automaticamente. Informe os seis números exibidos acima.";
         }
     }
 
     function reiniciar() {
-        document.getElementById("tela-qr").style.display = "none";
+        document.getElementById("tela-codigo").style.display = "none";
         document.getElementById("tela-senha").style.display = "block";
         document.getElementById("retorno-copia").innerText = "";
-        linkClienteAtual = "";
+        codigoAtual = "";
     }
 </script>
 
