@@ -311,6 +311,14 @@
         .campaign-form { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         .campaign-form .span-2 { grid-column: 1 / -1; }
         .settings-note { padding: 14px 16px; border-left: 3px solid var(--rose); border-radius: 8px; color: #7f2731; background: var(--rose-claro); font-size: 12px; line-height: 1.55; }
+        .danger-zone { margin-top: 28px; border: 1px dashed var(--borda); border-radius: 12px; background: rgba(255,255,255,.45); }
+        .danger-zone > summary { padding: 12px 16px; color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 700; }
+        .danger-zone[open] { border-color: #efb6bc; background: var(--vermelho-claro); }
+        .danger-zone-panel { padding: 2px 16px 18px; }
+        .danger-zone-panel h2 { margin: 8px 0; color: var(--vermelho); font-size: 18px; }
+        .danger-zone-panel p { max-width: 760px; margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+        .backup-confirmation { display: flex; align-items: flex-start; gap: 9px; padding: 12px; border: 1px solid var(--borda); border-radius: 10px; background: var(--branco); color: var(--texto); font-size: 13px; line-height: 1.45; }
+        .backup-confirmation input { margin-top: 3px; }
 
         .audit-list { display: grid; }
         .audit-row { display: grid; grid-template-columns: 11px minmax(180px, .8fr) minmax(220px, 1.2fr) 150px; gap: 15px; align-items: center; padding: 15px 18px; border-bottom: 1px solid #e8eef1; font-size: 13px; }
@@ -409,7 +417,7 @@
                 <div class="mobile-wordmark" data-loja-nome>PASSO FIRME</div>
                 <span class="eyebrow">Acesso restrito</span>
                 <h2>Área administrativa</h2>
-                <p>Use a senha exclusiva da administração. Ela é diferente da senha utilizada pela equipe para gerar convites.</p>
+                <p>Use a senha de acesso configurada para esta loja.</p>
                 <div class="field">
                     <label for="admin-password">Senha administrativa</label>
                     <input id="admin-password" type="password" maxlength="256" autocomplete="current-password" required autofocus>
@@ -529,6 +537,14 @@
                             <div class="settings-note"><strong>Atenção:</strong> só pode existir uma campanha ativa. Antes de ativar outra, encerre a atual e confira se a nova possui ao menos dois prêmios ativos.</div>
                         </form>
                     </div></article>
+                    <details class="danger-zone">
+                        <summary>Manutenção avançada</summary>
+                        <div class="danger-zone-panel">
+                            <h2>Limpar participantes da campanha</h2>
+                            <p>Use somente quando precisar iniciar uma nova base. Antes de qualquer exclusão, o sistema baixa uma planilha CSV com os registros atuais. A limpeza não devolve o estoque e não torna códigos antigos reutilizáveis.</p>
+                            <button class="btn btn-danger" id="prepare-cleanup-button" type="button">Preparar limpeza e baixar planilha</button>
+                        </div>
+                    </details>
                 </section>
 
                 <section class="page" id="page-audit">
@@ -953,20 +969,48 @@
             finally { setLoading(false); }
         }
 
-        async function exportCsv() {
+        async function exportCsv({ notify = true } = {}) {
             setLoading(true);
             try {
                 const { response } = await api(`/admin/participantes.csv?campanha_id=${state.painel.campanha.id}`);
+                const totalText = response.headers.get("X-Total-Registros");
+                if (!/^\d+$/.test(totalText || "")) throw new Error("O servidor não confirmou quantos registros estão no backup.");
                 const blob = await response.blob();
                 const url = URL.createObjectURL(blob);
                 const anchor = document.createElement("a");
                 anchor.href = url;
                 anchor.download = `participantes-${state.painel.campanha.id}.csv`;
+                document.body.appendChild(anchor);
                 anchor.click();
-                URL.revokeObjectURL(url);
-                toast("Planilha exportada.");
-            } catch (error) { toast(error.message, "error"); }
+                anchor.remove();
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                if (notify) toast("Planilha exportada.");
+                return { total: Number(totalText), nome: anchor.download };
+            } catch (error) { toast(error.message, "error"); return null; }
             finally { setLoading(false); }
+        }
+
+        async function prepareParticipantCleanup() {
+            const backup = await exportCsv({ notify: false });
+            if (!backup) return;
+            toast(`Backup com ${formatNumber(backup.total)} registro(s) baixado.`);
+            openModal("Confirmar limpeza de participantes", `
+                <div class="settings-note" style="margin-bottom:16px"><strong>Backup criado:</strong> ${escapeHtml(backup.nome)}<br>${formatNumber(backup.total)} registro(s) serão excluídos da campanha <strong>${escapeHtml(state.painel.campanha.nome)}</strong>.</div>
+                <label class="backup-confirmation"><input id="cleanup-backup-confirmed" type="checkbox"><span>Conferi que a planilha foi baixada e vou guardá-la em local seguro.</span></label>
+                <div class="field" style="margin-top:16px"><label for="cleanup-confirmation">Para continuar, digite EXCLUIR</label><input id="cleanup-confirmation" autocomplete="off" spellcheck="false" placeholder="EXCLUIR"></div>
+                <p class="field-help">Esta ação apaga nomes, WhatsApps, aniversários, vouchers e histórico de resgate da campanha. Ela não restaura estoque e não reativa códigos.</p>
+            `, "Excluir participantes", async () => {
+                if (!el("cleanup-backup-confirmed").checked) throw new Error("Confirme que o backup foi baixado.");
+                if (el("cleanup-confirmation").value !== "EXCLUIR") throw new Error("Digite EXCLUIR exatamente como solicitado.");
+                const { data } = await api(`/admin/participantes?campanha_id=${state.painel.campanha.id}`, {
+                    method: "DELETE",
+                    body: JSON.stringify({ confirmacao: "EXCLUIR", total_esperado: backup.total })
+                });
+                closeModal();
+                toast(data.mensagem || "Participantes excluídos.");
+                await loadPanel(state.painel.campanha.id, true);
+            });
+            el("modal-submit").className = "btn btn-danger";
         }
 
         el("login-form").addEventListener("submit", async event => {
@@ -1036,7 +1080,8 @@
         el("add-prize-button").addEventListener("click", () => prizeModal());
         el("new-campaign-button").addEventListener("click", campaignModal);
         el("save-campaign-button").addEventListener("click", saveCampaign);
-        el("export-button").addEventListener("click", exportCsv);
+        el("export-button").addEventListener("click", () => exportCsv());
+        el("prepare-cleanup-button").addEventListener("click", prepareParticipantCleanup);
         el("participant-search").addEventListener("input", renderParticipants);
         el("participant-status").addEventListener("change", renderParticipants);
         el("invite-search").addEventListener("input", renderInvites);
