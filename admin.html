@@ -523,7 +523,7 @@
 
                 <section class="page" id="page-campaign">
                     <div class="page-header">
-                        <div><h1>Configurar campanha</h1><p>Edite o período, o aviso de privacidade e o estado operacional.</p></div>
+                        <div><h1>Configurar campanha</h1><p>Edite o período, a mensagem do WhatsApp, a privacidade e o estado operacional.</p></div>
                         <div class="header-actions"><button class="btn btn-secondary" id="new-campaign-button">＋ Nova campanha</button><button class="btn btn-primary" id="save-campaign-button">Salvar alterações</button></div>
                     </div>
                     <article class="card"><div class="card-body">
@@ -532,6 +532,7 @@
                             <div class="field"><label for="campaign-start">Início</label><input id="campaign-start" type="datetime-local"></div>
                             <div class="field"><label for="campaign-end">Encerramento</label><input id="campaign-end" type="datetime-local"></div>
                             <div class="field span-2"><label for="campaign-consent">Texto de ciência do Aviso de Privacidade</label><textarea id="campaign-consent" maxlength="500" required></textarea><span class="field-help">A cliente precisa confirmar esse texto para participar. A autorização de aniversário é exibida separadamente e permanece opcional.</span></div>
+                            <div class="field span-2"><label for="campaign-whatsapp-message">Mensagem de compartilhamento no WhatsApp</label><textarea id="campaign-whatsapp-message" maxlength="1000" required></textarea><span class="field-help">Esta é a mensagem que a cliente envia antes de girar. Você pode usar <strong>{nome}</strong>, <strong>{loja}</strong>, <strong>{campanha}</strong> e <strong>{instagram}</strong>. <span id="campaign-whatsapp-count">0/1000</span></span><div class="settings-note"><strong>Prévia para a cliente:</strong><br><span id="campaign-whatsapp-preview" style="white-space:pre-wrap"></span></div></div>
                             <div class="settings-note"><strong>Versão do aviso:</strong> <span id="campaign-privacy-version">1.0</span> · <a href="privacidade.html" target="_blank" rel="noopener">Abrir aviso publicado</a></div>
                             <div class="field"><label for="campaign-status">Status</label><select id="campaign-status"><option value="rascunho">Rascunho</option><option value="ativa">Ativa</option><option value="encerrada">Encerrada</option><option value="cancelada">Cancelada</option></select></div>
                             <div class="settings-note"><strong>Atenção:</strong> só pode existir uma campanha ativa. Antes de ativar outra, encerre a atual e confira se a nova possui ao menos dois prêmios ativos.</div>
@@ -834,6 +835,28 @@
             el("invites-foot").innerHTML = `<span>${formatNumber(invites.length)} convites exibidos</span><span>Até 150 convites recentes</span>`;
         }
 
+        function applyWhatsAppVariables(template, campaignName) {
+            const values = {
+                nome: "Mariana",
+                loja: LojaConfig.nome,
+                campanha: campaignName || "nossa campanha",
+                instagram: LojaConfig.instagram
+            };
+            return String(template || "").replace(
+                /\{(nome|loja|campanha|instagram)\}/g,
+                (_, key) => values[key]
+            );
+        }
+
+        function updateWhatsAppMessagePreview() {
+            const input = el("campaign-whatsapp-message");
+            el("campaign-whatsapp-count").textContent = `${input.value.length}/1000`;
+            el("campaign-whatsapp-preview").textContent = applyWhatsAppVariables(
+                input.value,
+                el("campaign-name").value || state.painel?.campanha?.nome
+            );
+        }
+
         function renderCampaignForm() {
             const campaign = state.painel.campanha;
             if (!campaign) return;
@@ -841,8 +864,11 @@
             el("campaign-start").value = toLocalInput(campaign.data_inicio);
             el("campaign-end").value = toLocalInput(campaign.data_fim);
             el("campaign-consent").value = campaign.texto_consentimento || "";
+            el("campaign-whatsapp-message").value =
+                campaign.mensagem_whatsapp || LojaConfig.mensagemCompartilhamento;
             el("campaign-privacy-version").textContent = campaign.politica_privacidade_versao || "1.0";
             el("campaign-status").value = campaign.status || "rascunho";
+            updateWhatsAppMessagePreview();
         }
 
         function renderAudit() {
@@ -913,13 +939,15 @@
                 <div class="field"><label for="modal-campaign-start">Início planejado</label><input id="modal-campaign-start" type="datetime-local"></div>
                 <div class="field"><label for="modal-campaign-end">Encerramento planejado</label><input id="modal-campaign-end" type="datetime-local"></div>
                 <div class="field"><label for="modal-campaign-consent">Texto de ciência do Aviso de Privacidade</label><textarea id="modal-campaign-consent" maxlength="500" required>Li o Aviso de Privacidade e estou ciente de como meus dados serão utilizados nesta campanha.</textarea></div>
+                <div class="field"><label for="modal-campaign-whatsapp-message">Mensagem de compartilhamento no WhatsApp</label><textarea id="modal-campaign-whatsapp-message" maxlength="1000" required>${escapeHtml(LojaConfig.mensagemCompartilhamento)}</textarea><span class="field-help">Variáveis disponíveis: {nome}, {loja}, {campanha} e {instagram}.</span></div>
                 <div class="settings-note">A nova campanha será criada como rascunho. Depois, cadastre os prêmios e ative-a quando estiver pronta.</div>
             `, "Criar campanha", async () => {
                 const payload = {
                     nome: el("modal-campaign-name").value,
                     data_inicio: toIso(el("modal-campaign-start").value),
                     data_fim: toIso(el("modal-campaign-end").value),
-                    texto_consentimento: el("modal-campaign-consent").value
+                    texto_consentimento: el("modal-campaign-consent").value,
+                    mensagem_whatsapp: el("modal-campaign-whatsapp-message").value
                 };
                 const { data } = await api("/admin/campanhas", { method: "POST", body: JSON.stringify(payload) });
                 closeModal();
@@ -958,6 +986,7 @@
                 data_inicio: toIso(el("campaign-start").value),
                 data_fim: toIso(el("campaign-end").value),
                 texto_consentimento: el("campaign-consent").value,
+                mensagem_whatsapp: el("campaign-whatsapp-message").value,
                 status: el("campaign-status").value
             };
             setLoading(true);
@@ -1086,6 +1115,8 @@
         el("participant-status").addEventListener("change", renderParticipants);
         el("invite-search").addEventListener("input", renderInvites);
         el("invite-status").addEventListener("change", renderInvites);
+        el("campaign-whatsapp-message").addEventListener("input", updateWhatsAppMessagePreview);
+        el("campaign-name").addEventListener("input", updateWhatsAppMessagePreview);
 
         (async function initialize() {
             if (!state.token) return;
