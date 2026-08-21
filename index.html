@@ -511,7 +511,20 @@
 
     // Mensagem enviada quando a cliente compartilha no WhatsApp.
     // É só uma frase — pode me pedir pra ajustar o tom quando quiser.
-    const MENSAGEM_COMPARTILHAMENTO = LojaConfig.mensagemCompartilhamento;
+    let mensagemCompartilhamentoAtual = LojaConfig.mensagemCompartilhamento;
+
+    function montarMensagemCompartilhamento() {
+        const variaveis = {
+            nome: document.getElementById("nome").value.trim() || "cliente",
+            loja: LojaConfig.nome,
+            campanha: campanhaAtual || "nossa campanha",
+            instagram: LojaConfig.instagram
+        };
+        return mensagemCompartilhamentoAtual.replace(
+            /\{(nome|loja|campanha|instagram)\}/g,
+            (_, nomeVariavel) => variaveis[nomeVariavel]
+        );
+    }
 
     // --- Sons (gerados por código, sem precisar de arquivo de áudio) ---
 
@@ -826,6 +839,8 @@
         }
 
         campanhaAtual = dados.campanha?.nome || campanhaAtual;
+        mensagemCompartilhamentoAtual =
+            dados.campanha?.mensagem_whatsapp || LojaConfig.mensagemCompartilhamento;
         if (dados.campanha?.texto_consentimento) {
             document.getElementById("texto-ciencia-privacidade").textContent =
                 dados.campanha.texto_consentimento;
@@ -902,7 +917,7 @@
         const botaoCompartilhar = document.getElementById("botao-compartilhar");
         const botaoConfirmar = document.getElementById("botao-confirmar-compartilhamento");
         const instrucao = document.getElementById("instrucao-compartilhamento");
-        const texto = encodeURIComponent(MENSAGEM_COMPARTILHAMENTO);
+        const texto = encodeURIComponent(montarMensagemCompartilhamento());
         const linkWeb = `https://wa.me/?text=${texto}`;
         const janelaCompartilhamento = window.open(linkWeb, "_blank", "noopener,noreferrer");
 

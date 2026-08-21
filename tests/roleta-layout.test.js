@@ -65,6 +65,26 @@ test("libera a confirmação de compartilhamento também no computador", () => {
     assert.doesNotMatch(funcao, /visibilitychange/);
 });
 
+test("usa a mensagem de WhatsApp da campanha com variáveis e mantém o padrão da loja", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+
+    assert.match(html, /let mensagemCompartilhamentoAtual = LojaConfig\.mensagemCompartilhamento/);
+    assert.match(html, /dados\.campanha\?\.mensagem_whatsapp \|\| LojaConfig\.mensagemCompartilhamento/);
+    assert.match(html, /nome\|loja\|campanha\|instagram/);
+    assert.match(html, /encodeURIComponent\(montarMensagemCompartilhamento\(\)\)/);
+});
+
+test("painel permite editar e pré-visualizar a mensagem de WhatsApp", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "admin.html"), "utf8");
+
+    assert.match(html, /id="campaign-whatsapp-message"[^>]*maxlength="1000"/);
+    assert.match(html, /id="campaign-whatsapp-preview"/);
+    assert.match(html, /campaign\.mensagem_whatsapp \|\| LojaConfig\.mensagemCompartilhamento/);
+    assert.match(html, /mensagem_whatsapp: el\("campaign-whatsapp-message"\)\.value/);
+    assert.match(html, /mensagem_whatsapp: el\("modal-campaign-whatsapp-message"\)\.value/);
+    assert.match(html, /\{nome\}.*\{loja\}.*\{campanha\}.*\{instagram\}/s);
+});
+
 test("mantém válida a sintaxe do JavaScript embutido na página", () => {
     const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
     const scriptsSemSrc = [
